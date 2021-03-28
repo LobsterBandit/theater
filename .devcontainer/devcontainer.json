@@ -1,0 +1,40 @@
+{
+  "name": "theater",
+
+  "image": "lobsterbandit/dev-golang:edge",
+  "extensions": ["golang.go", "mhutchie.git-graph"],
+  "shutdownAction": "none",
+    
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=theater-workspace,target=/workspace,type=volume",
+
+  "mounts": [
+    "source=theater-vscode-server,target=/home/gopher/.vscode-server/extensions,type=volume",
+    "source=theater-vscode-server-insiders,target=/home/gopher/.vscode-server-insiders/extensions,type=volume"
+  ],
+    
+  "settings": {
+    "go.lintOnSave": "file",
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": ["--enable-all"],
+    "go.useLanguageServer": true,
+    "go.vetOnSave": "package",
+    "[go]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+      },
+      "editor.snippetSuggestions": "none"
+    },
+    "[go.mod]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+      }
+    },
+    "gopls": {
+      "usePlaceholders": true,
+      "staticcheck": false
+    }
+  }
+}

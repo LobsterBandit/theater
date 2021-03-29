@@ -61,7 +61,7 @@ func plexWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		if wErr != nil {
 			err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
 		}
-		// Log the error
+
 		fmt.Println("can't create a multipart reader from request:", err)
 
 		return
@@ -83,7 +83,7 @@ func main() {
 
 	http.HandleFunc(createRoute("/plex", http.MethodPost, plexWebhookHandler))
 
-	fmt.Printf("Starting server at port 5005\n")
+	fmt.Println("Starting server at port 9501")
 
-	log.Fatal(http.ListenAndServe(":5005", nil))
+	log.Fatal(http.ListenAndServe(":9501", nil))
 }

@@ -83,7 +83,7 @@ func main() {
 
 	http.HandleFunc(createRoute("/plex", http.MethodPost, plexWebhookHandler))
 
-	fmt.Printf("Starting server at port 9501\n")
+	fmt.Println("Starting server at port 9501")
 
 	log.Fatal(http.ListenAndServe(":9501", nil))
 }

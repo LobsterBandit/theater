@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/hekmon/plexwebhooks"
@@ -61,7 +62,7 @@ func plexWebhookHandler(w http.ResponseWriter, r *http.Request) {
 		if wErr != nil {
 			err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
 		}
-		// Log the error
+
 		fmt.Println("can't create a multipart reader from request:", err)
 
 		return
@@ -83,7 +84,9 @@ func main() {
 
 	http.HandleFunc(createRoute("/plex", http.MethodPost, plexWebhookHandler))
 
-	fmt.Printf("Starting server at port 5005\n")
+	serverPort := os.Getenv("PORT")
 
-	log.Fatal(http.ListenAndServe(":5005", nil))
+	fmt.Printf("Starting server at port %v\n", serverPort)
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", serverPort), nil))
 }

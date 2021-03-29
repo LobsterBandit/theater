@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/hekmon/plexwebhooks"
@@ -84,9 +83,7 @@ func main() {
 
 	http.HandleFunc(createRoute("/plex", http.MethodPost, plexWebhookHandler))
 
-	serverPort := os.Getenv("PORT")
+	fmt.Printf("Starting server at port 9501\n")
 
-	fmt.Printf("Starting server at port %v\n", serverPort)
-
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", serverPort), nil))
+	log.Fatal(http.ListenAndServe(":9501", nil))
 }

@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/hekmon/plexwebhooks"
 )
@@ -82,10 +81,6 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 
 			return
 		}
-
-		fmt.Println()
-		fmt.Println(time.Now())
-		fmt.Printf("%+v\n", *payload)
 
 		jsonPayload, err := json.Marshal(*payload)
 		if err != nil {

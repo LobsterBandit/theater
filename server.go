@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -85,6 +86,13 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 		fmt.Println()
 		fmt.Println(time.Now())
 		fmt.Printf("%+v\n", *payload)
+
+		jsonPayload, err := json.Marshal(*payload)
+		if err != nil {
+			fmt.Println("error marshalling json", err)
+		}
+
+		fmt.Println(string(jsonPayload))
 
 		if thumb != nil {
 			fmt.Printf("Name: %s | Size: %d\n", thumb.Filename, len(thumb.Data))

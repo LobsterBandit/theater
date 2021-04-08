@@ -49,14 +49,14 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 				return
 			}
 
-			var thePayload []byte
+			var thePayload interface{}
 			if err := json.NewDecoder(formPart).Decode(&thePayload); err != nil {
 				webhook.err = fmt.Errorf("payload form part read failed: %w", err)
 
 				return
 			}
 
-			fmt.Println(string(thePayload))
+			fmt.Println(thePayload)
 
 			// var someJson []byte
 			// if _, err := formPart.Read(someJson); err != nil {

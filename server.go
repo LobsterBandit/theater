@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/hekmon/plexwebhooks"
 )
 
 type Server struct {
@@ -63,34 +61,26 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 				err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
 			}
 
-			fmt.Println("can't create a multipart reader from request:", err)
+			fmt.Println("unable to create a multipart reader from request:", err)
 
 			return
 		}
 
-		payload, thumb, err := plexwebhooks.Extract(multiPartReader)
-		if err != nil {
+		result := ParsePlexWebhook(multiPartReader)
+		if result.err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 
-			_, wErr := w.Write([]byte(err.Error()))
+			_, wErr := w.Write([]byte(result.err.Error()))
 			if wErr != nil {
-				err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
+				result.err = fmt.Errorf("request error: %w | write error: %v", result.err, wErr)
 			}
 
-			fmt.Println("can't create a multipart reader from request:", err)
+			fmt.Println("unable to parse webhook request:", result.err)
 
 			return
 		}
 
-		fmt.Println()
-		fmt.Println(time.Now())
-		fmt.Printf("%+v\n", *payload)
-
-		if thumb != nil {
-			fmt.Printf("Name: %s | Size: %d\n", thumb.Filename, len(thumb.Data))
-		}
-
-		fmt.Println()
+		fmt.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
 	}
 }
 

@@ -1,14 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/hekmon/plexwebhooks"
 )
 
 type Server struct {
@@ -68,13 +65,13 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			return
 		}
 
-		payload, thumb, err := plexwebhooks.Extract(multiPartReader)
-		if err != nil {
+		result := ParsePlexWebhook(multiPartReader)
+		if result.err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 
-			_, wErr := w.Write([]byte(err.Error()))
+			_, wErr := w.Write([]byte(result.err.Error()))
 			if wErr != nil {
-				err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
+				err = fmt.Errorf("request error: %v | write error: %v", result.err, wErr)
 			}
 
 			fmt.Println("can't create a multipart reader from request:", err)
@@ -82,17 +79,11 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			return
 		}
 
-		jsonPayload, err := json.Marshal(*payload)
-		if err != nil {
-			fmt.Println("error marshalling json", err)
+		if result.Thumbnail != nil {
+			fmt.Printf("Name: %s | Size: %d\n", result.Thumbnail.Filename, len(result.Thumbnail.Data))
 		}
 
-		fmt.Println(string(jsonPayload))
-
-		if thumb != nil {
-			fmt.Printf("Name: %s | Size: %d\n", thumb.Filename, len(thumb.Data))
-		}
-
+		fmt.Println(string(result.RawPayload))
 		fmt.Println()
 	}
 }

@@ -32,7 +32,7 @@ type WebhookResult struct {
 
 // Extract extracts the payload and the thumbnail (if present) from a multipart reader.
 func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
-	webhook = &WebhookResult{RawPayload: make([]byte, 0)}
+	webhook = &WebhookResult{}
 
 	if mpr == nil {
 		webhook.err = ErrNilMultipartReader
@@ -49,18 +49,28 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 				return
 			}
 
-			if _, err := formPart.Read(webhook.RawPayload); err != nil {
+			var thePayload []byte
+			if err := json.NewDecoder(formPart).Decode(&thePayload); err != nil {
 				webhook.err = fmt.Errorf("payload form part read failed: %w", err)
 
 				return
 			}
 
-			webhook.Payload = new(plexwebhooks.Payload)
-			if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
-				webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
+			fmt.Println(string(thePayload))
 
-				return
-			}
+			// var someJson []byte
+			// if _, err := formPart.Read(someJson); err != nil {
+			// 	webhook.err = fmt.Errorf("payload form part read failed: %w", err)
+
+			// 	return
+			// }
+
+			// webhook.Payload = new(plexwebhooks.Payload)
+			// if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
+			// 	webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
+
+			// 	return
+			// }
 		case "thumb":
 			if webhook.Thumbnail != nil {
 				webhook.err = ErrMultipleThumbnailPart

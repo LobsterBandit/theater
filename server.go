@@ -71,10 +71,10 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 
 			_, wErr := w.Write([]byte(result.err.Error()))
 			if wErr != nil {
-				err = fmt.Errorf("request error: %v | write error: %v", result.err, wErr)
+				result.err = fmt.Errorf("request error: %w | write error: %v", result.err, wErr)
 			}
 
-			fmt.Println("can't create a multipart reader from request:", err)
+			fmt.Println("can't create a multipart reader from request:", result.err)
 
 			return
 		}

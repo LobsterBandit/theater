@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Server struct {
@@ -74,21 +75,12 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 				result.err = fmt.Errorf("request error: %w | write error: %v", result.err, wErr)
 			}
 
-			fmt.Println("can't create a multipart reader from request:", result.err)
+			fmt.Println("unable to parse webhook request:", result.err)
 
 			return
 		}
 
-		if result.Thumbnail != nil {
-			fmt.Printf("Name: %s | Size: %d\n", result.Thumbnail.Filename, len(result.Thumbnail.Data))
-		}
-
-		fmt.Println("Raw payload")
-		fmt.Println(string(result.RawPayload))
-		fmt.Println()
-		fmt.Println("Parsed payload")
-		fmt.Println(result.Payload)
-		fmt.Println()
+		fmt.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
 	}
 }
 

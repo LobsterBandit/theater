@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -56,25 +57,14 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 				return
 			}
 
-			fmt.Println(buf.String())
+			webhook.RawPayload = buf.Bytes()
 
-			// var decodedPayload interface{}
-			// if err := json.NewDecoder(formPart).Decode(&decodedPayload); err != nil {
-			// 	webhook.err = fmt.Errorf("payload form part read failed: %w", err)
+			webhook.Payload = new(plexwebhooks.Payload)
+			if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
+				webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
 
-			// 	return
-			// }
-
-			// fmt.Println(decodedPayload)
-
-			// webhook.RawPayload = []byte(decodedPayload)
-
-			// webhook.Payload = new(plexwebhooks.Payload)
-			// if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
-			// 	webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
-
-			// 	return
-			// }
+				return
+			}
 		case "thumb":
 			if webhook.Thumbnail != nil {
 				webhook.err = ErrMultipleThumbnailPart

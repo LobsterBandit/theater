@@ -67,8 +67,6 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 
 		result := ParsePlexWebhook(multiPartReader)
 		if result.err != nil {
-			fmt.Println(string(result.RawPayload))
-
 			w.WriteHeader(http.StatusInternalServerError)
 
 			_, wErr := w.Write([]byte(result.err.Error()))
@@ -85,6 +83,11 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			fmt.Printf("Name: %s | Size: %d\n", result.Thumbnail.Filename, len(result.Thumbnail.Data))
 		}
 
+		fmt.Println("Raw payload")
+		fmt.Println(string(result.RawPayload))
+		fmt.Println()
+		fmt.Println("Parsed payload")
+		fmt.Println(result.Payload)
 		fmt.Println()
 	}
 }

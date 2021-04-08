@@ -32,7 +32,7 @@ type WebhookResult struct {
 
 // Extract extracts the payload and the thumbnail (if present) from a multipart reader.
 func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
-	webhook = &WebhookResult{}
+	webhook = &WebhookResult{RawPayload: make([]byte, 0)}
 
 	if mpr == nil {
 		webhook.err = ErrNilMultipartReader

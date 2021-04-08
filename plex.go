@@ -56,9 +56,7 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 			}
 
 			webhook.Payload = new(plexwebhooks.Payload)
-			decoder := json.NewDecoder(formPart)
-
-			if err := decoder.Decode(webhook.Payload); err != nil {
+			if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
 				webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
 
 				return

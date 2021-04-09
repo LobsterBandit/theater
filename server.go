@@ -10,7 +10,8 @@ import (
 )
 
 type Server struct {
-	Port string
+	Port  string
+	Store *Store
 }
 
 func (s *Server) Start() {
@@ -66,21 +67,25 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			return
 		}
 
-		result := ParsePlexWebhook(multiPartReader)
-		if result.err != nil {
+		result, err := ParsePlexWebhook(multiPartReader)
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 
-			_, wErr := w.Write([]byte(result.err.Error()))
+			_, wErr := w.Write([]byte(err.Error()))
 			if wErr != nil {
-				result.err = fmt.Errorf("request error: %w | write error: %v", result.err, wErr)
+				err = fmt.Errorf("request error: %w | write error: %v", err, wErr)
 			}
 
-			fmt.Println("unable to parse webhook request:", result.err)
+			fmt.Println("unable to parse webhook request:", err)
 
 			return
 		}
 
 		fmt.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
+
+		if err := s.Store.SavePlexWebhook(result); err != nil {
+			fmt.Println("unable to save webhook:", err)
+		}
 	}
 }
 
@@ -91,11 +96,4 @@ func env(key, defaultValue string) string {
 	}
 
 	return value
-}
-
-func main() {
-	server := Server{
-		Port: env("PORT", "9501"),
-	}
-	server.Start()
 }

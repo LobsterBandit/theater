@@ -66,7 +66,7 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			return
 		}
 
-		result, err := ParsePlexWebhook(multiPartReader)
+		result, err := ParseWebhook(multiPartReader)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 
@@ -82,7 +82,7 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 
 		log.Printf("received plex webhook: %s\n", result.Payload.Event)
 
-		if err := s.Store.SavePlexWebhook(result); err != nil {
+		if err := s.Store.Insert(result); err != nil {
 			log.Println("unable to save webhook:", err)
 		}
 	}

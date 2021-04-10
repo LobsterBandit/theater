@@ -6,11 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/hekmon/plexwebhooks"
 )
 
 type Server struct {
-	Port  string
-	Store *Store
+	Port         string
+	Store        *Store
+	DiscordID    string
+	DiscordToken string
 }
 
 func (s *Server) Start() {
@@ -81,6 +85,28 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 		}
 
 		log.Printf("received plex webhook: %s\n", result.Payload.Event)
+
+		if s.DiscordID != "" && s.DiscordToken != "" {
+			discordWebhook := &Webhook{
+				ID:    s.DiscordID,
+				Token: s.DiscordToken,
+				Params: &WebhookParams{
+					Content: fmt.Sprintf("Plex %s", result.Payload.Event),
+					Images:  []*plexwebhooks.Thumbnail{result.Thumbnail},
+					Embeds: []*MessageEmbed{
+						&MessageEmbed{
+							Title:       string,
+							Description: string,
+						},
+					},
+				},
+			}
+
+			err := discordWebhook.PostMessage()
+			if err != nil {
+				log.Println("error sending discord webhook:", err)
+			}
+		}
 
 		if err := s.Store.Insert(result); err != nil {
 			log.Println("unable to save webhook:", err)

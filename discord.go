@@ -17,28 +17,96 @@ import (
 var webhookBaseURL = "https://discordapp.com/api/webhooks/" //nolint:gochecknoglobals
 
 type Webhook struct {
-	ID     string
-	Token  string
-	Params *WebhookParams
+	ID      string
+	Token   string
+	Message *Message
 }
 
-type WebhookParams struct {
-	Content string
-	Images  []*plexwebhooks.Thumbnail
-	Embeds  []*MessageEmbed
+// A Message stores all data related to a specific Discord message.
+type Message struct {
+	// A list of thumbnails received from a plex webhook.
+	Images []*plexwebhooks.Thumbnail
+	// A list of embeds present in the message.
+	Embeds []*MessageEmbed `json:"embeds"`
 }
 
+// MessageEmbedFooter is a part of a MessageEmbed struct.
+type MessageEmbedFooter struct {
+	Text         string `json:"text,omitempty"`
+	IconURL      string `json:"icon_url,omitempty"`
+	ProxyIconURL string `json:"proxy_icon_url,omitempty"`
+}
+
+// MessageEmbedImage is a part of a MessageEmbed struct.
+type MessageEmbedImage struct {
+	URL      string `json:"url,omitempty"`
+	ProxyURL string `json:"proxy_url,omitempty"`
+	Width    int    `json:"width,omitempty"`
+	Height   int    `json:"height,omitempty"`
+}
+
+// MessageEmbedThumbnail is a part of a MessageEmbed struct.
+type MessageEmbedThumbnail struct {
+	URL      string `json:"url,omitempty"`
+	ProxyURL string `json:"proxy_url,omitempty"`
+	Width    int    `json:"width,omitempty"`
+	Height   int    `json:"height,omitempty"`
+}
+
+// MessageEmbedVideo is a part of a MessageEmbed struct.
+type MessageEmbedVideo struct {
+	URL    string `json:"url,omitempty"`
+	Width  int    `json:"width,omitempty"`
+	Height int    `json:"height,omitempty"`
+}
+
+// MessageEmbedProvider is a part of a MessageEmbed struct.
+type MessageEmbedProvider struct {
+	URL  string `json:"url,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// MessageEmbedAuthor is a part of a MessageEmbed struct.
+type MessageEmbedAuthor struct {
+	URL          string `json:"url,omitempty"`
+	Name         string `json:"name,omitempty"`
+	IconURL      string `json:"icon_url,omitempty"`
+	ProxyIconURL string `json:"proxy_icon_url,omitempty"`
+}
+
+// MessageEmbedField is a part of a MessageEmbed struct.
+type MessageEmbedField struct {
+	Name   string `json:"name,omitempty"`
+	Value  string `json:"value,omitempty"`
+	Inline bool   `json:"inline,omitempty"`
+}
+
+// An MessageEmbed stores data for message embeds.
 type MessageEmbed struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	Timestamp   string `json:"timestamp,omitempty"`
-	Color       int    `json:"color,omitempty"`
+	URL         string                 `json:"url,omitempty"`
+	Type        string                 `json:"type,omitempty"`
+	Title       string                 `json:"title,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	Timestamp   string                 `json:"timestamp,omitempty"`
+	Color       int                    `json:"color,omitempty"`
+	Footer      *MessageEmbedFooter    `json:"footer,omitempty"`
+	Image       *MessageEmbedImage     `json:"image,omitempty"`
+	Thumbnail   *MessageEmbedThumbnail `json:"thumbnail,omitempty"`
+	Video       *MessageEmbedVideo     `json:"video,omitempty"`
+	Provider    *MessageEmbedProvider  `json:"provider,omitempty"`
+	Author      *MessageEmbedAuthor    `json:"author,omitempty"`
+	Fields      []*MessageEmbedField   `json:"fields,omitempty"`
 }
 
 func (w *Webhook) PostMessage() (err error) {
 	log.Println("Sending webhook to discord...")
 
-	msg, err := w.executeMultipart(false)
+	var msg []byte
+	if len(w.Message.Images) > 0 {
+		msg, err = w.executeMultipart(false)
+	} else {
+		msg, err = w.executeJSON(false)
+	}
 	if err != nil {
 		return
 	}
@@ -55,6 +123,37 @@ func (w *Webhook) PostMessage() (err error) {
 
 func (w *Webhook) URL() string {
 	return webhookBaseURL + w.ID + "/" + w.Token
+}
+
+func (w *Webhook) executeJSON(wait bool) (response []byte, err error) {
+	url := w.URL()
+	if wait {
+		url += "?wait=true"
+	}
+
+	log.Println("Issuing webhook to", url)
+
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, url, body)
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	log.Println("discord response:", resp.Status)
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	return respBody, nil
 }
 
 func (w *Webhook) executeMultipart(wait bool) (response []byte, err error) {

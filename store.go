@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS plex_webhooks (
 	}
 
 	if _, err = db.Exec(`
-CREATE INDEX idx_plex_webhooks_date_type
+CREATE INDEX IF NOT EXISTS idx_plex_webhooks_date_type
 ON plex_webhooks (id, date, type, user)`); err != nil {
 		log.Println(err)
 	}

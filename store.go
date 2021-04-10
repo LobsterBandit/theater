@@ -33,9 +33,14 @@ CREATE TABLE IF NOT EXISTS plex_webhooks (
 	type TEXT NOT NULL,
 	user TEXT NOT NULL,
 	payload BLOB NOT NULL
-)
-`); err != nil {
+)`); err != nil {
 		log.Fatal(err)
+	}
+
+	if _, err = db.Exec(`
+CREATE INDEX idx_plex_webhooks_date_type
+ON plex_webhooks (id, date, type, user)`); err != nil {
+		log.Println(err)
 	}
 
 	return &Store{DB: db}

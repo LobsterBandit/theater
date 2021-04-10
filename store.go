@@ -32,26 +32,28 @@ CREATE TABLE IF NOT EXISTS plex_webhooks (
 	date TEXT NOT NULL,
 	type TEXT NOT NULL,
 	user TEXT NOT NULL,
+	player TEXT NOT NULL,
 	payload BLOB NOT NULL
 )`); err != nil {
 		log.Fatal(err)
 	}
 
 	if _, err = db.Exec(`
-CREATE INDEX IF NOT EXISTS idx_plex_webhooks_date_type
-ON plex_webhooks (id, date, type, user)`); err != nil {
+CREATE INDEX IF NOT EXISTS idx_plex_webhooks
+ON plex_webhooks (id, date, type, user, player)`); err != nil {
 		log.Println(err)
 	}
 
 	return &Store{DB: db}
 }
 
-func (s *Store) SavePlexWebhook(webhook *WebhookResult) error {
+func (s *Store) Insert(webhook *WebhookResult) error {
 	if _, err := s.DB.Exec(
-		"INSERT INTO plex_webhooks (date, type, user, payload) VALUES(?, ?, ?, ?)",
+		"INSERT INTO plex_webhooks (date, type, user, player, payload) VALUES(?, ?, ?, ?)",
 		time.Now().UTC().Format(time.RFC3339),
 		webhook.Payload.Event,
 		webhook.Payload.Account.Title,
+		webhook.Payload.Player.Title,
 		webhook.RawPayload,
 	); err != nil {
 		return fmt.Errorf("error saving plex webhook: %w", err)

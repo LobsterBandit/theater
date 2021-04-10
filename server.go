@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 type Server struct {
@@ -81,7 +80,7 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 			return
 		}
 
-		log.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
+		log.Printf("received plex webhook: %s\n", result.Payload.Event)
 
 		if err := s.Store.SavePlexWebhook(result); err != nil {
 			log.Println("unable to save webhook:", err)

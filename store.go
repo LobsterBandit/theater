@@ -1,20 +1,40 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"time"
 
-	badger "github.com/dgraph-io/badger/v3"
+	_ "modernc.org/sqlite"
 )
 
 type Store struct {
-	DB *badger.DB
+	DB *sql.DB
 }
 
 func InitStore(dir string) *Store {
-	db, err := badger.Open(badger.DefaultOptions(dir))
+	if err := os.MkdirAll(dir, 0755); err != nil && !errors.Is(err, os.ErrExist) {
+		log.Fatal(err)
+	}
+
+	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s", path.Join(dir, "theater.db")))
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err = db.Exec(`
+CREATE TABLE IF NOT EXISTS plex_webhooks (
+	id INTEGER PRIMARY KEY,
+	date TEXT NOT NULL,
+	type TEXT NOT NULL,
+	user TEXT NOT NULL,
+	payload BLOB NOT NULL,
+)
+`); err != nil {
 		log.Fatal(err)
 	}
 
@@ -22,17 +42,15 @@ func InitStore(dir string) *Store {
 }
 
 func (s *Store) SavePlexWebhook(webhook *WebhookResult) error {
-	return s.DB.Update(func(txn *badger.Txn) error { //nolint:wrapcheck
-		key := fmt.Sprintf("%s:%s:%s",
-			webhook.Payload.Event,
-			time.Now().UTC().Format(time.RFC3339),
-			webhook.Payload.Account.Title)
+	if _, err := s.DB.Exec(
+		"INSERT INTO plex_webhooks (date, type, user, payload) VALUES(?, ?, ?, ?)",
+		time.Now().UTC().Format(time.RFC3339),
+		webhook.Payload.Event,
+		webhook.Payload.Account.Title,
+		webhook.RawPayload,
+	); err != nil {
+		return fmt.Errorf("error saving plex webhook: %w", err)
+	}
 
-		err := txn.Set([]byte(key), webhook.RawPayload)
-		if err != nil {
-			err = fmt.Errorf("error writing plex webhook to db: %w", err)
-		}
-
-		return err
-	})
+	return nil
 }

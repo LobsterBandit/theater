@@ -18,7 +18,7 @@ func (s *Server) Start() {
 	s.setupRoutes()
 
 	addr := fmt.Sprintf(":%s", s.Port)
-	fmt.Println("Starting server at", addr)
+	log.Println("Starting server at", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
@@ -62,7 +62,7 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 				err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
 			}
 
-			fmt.Println("unable to create a multipart reader from request:", err)
+			log.Println("unable to create a multipart reader from request:", err)
 
 			return
 		}
@@ -76,15 +76,15 @@ func (s *Server) handlePlexWebhook() http.HandlerFunc {
 				err = fmt.Errorf("request error: %w | write error: %v", err, wErr)
 			}
 
-			fmt.Println("unable to parse webhook request:", err)
+			log.Println("unable to parse webhook request:", err)
 
 			return
 		}
 
-		fmt.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
+		log.Printf("[%s] received plex webhook: %s\n", time.Now().UTC().Format(time.RFC3339), result.Payload.Event)
 
 		if err := s.Store.SavePlexWebhook(result); err != nil {
-			fmt.Println("unable to save webhook:", err)
+			log.Println("unable to save webhook:", err)
 		}
 	}
 }

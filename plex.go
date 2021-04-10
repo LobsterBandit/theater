@@ -30,7 +30,7 @@ type WebhookResult struct {
 	Thumbnail  *plexwebhooks.Thumbnail
 }
 
-// Extract extracts the payload and the thumbnail (if present) from a multipart reader.
+// ParsePlexWebhook extracts the payload and the thumbnail (if present) from a multipart reader.
 func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult, err error) { //nolint:cyclop
 	webhook = &WebhookResult{}
 

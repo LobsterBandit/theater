@@ -28,31 +28,31 @@ type WebhookResult struct {
 	RawPayload []byte
 	Payload    *plexwebhooks.Payload
 	Thumbnail  *plexwebhooks.Thumbnail
-	err        error
 }
 
-// Extract extracts the payload and the thumbnail (if present) from a multipart reader.
-func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
+// ParsePlexWebhook extracts the payload and the thumbnail (if present) from a multipart reader.
+func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult, err error) { //nolint:cyclop
 	webhook = &WebhookResult{}
 
 	if mpr == nil {
-		webhook.err = ErrNilMultipartReader
+		err = ErrNilMultipartReader
 
 		return
 	}
 
-	for formPart, err := mpr.NextPart(); err == nil; formPart, err = mpr.NextPart() {
+	var formPart *multipart.Part
+	for formPart, err = mpr.NextPart(); err == nil; formPart, err = mpr.NextPart() {
 		switch formPart.FormName() {
 		case "payload":
 			if webhook.Payload != nil {
-				webhook.err = ErrMultiplePayloadPart
+				err = ErrMultiplePayloadPart
 
 				return
 			}
 
 			buf := new(bytes.Buffer)
-			if _, err := buf.ReadFrom(formPart); err != nil {
-				webhook.err = fmt.Errorf("payload form part read failed: %w", err)
+			if _, err = buf.ReadFrom(formPart); err != nil {
+				err = fmt.Errorf("payload form part read failed: %w", err)
 
 				return
 			}
@@ -60,14 +60,14 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 			webhook.RawPayload = buf.Bytes()
 
 			webhook.Payload = new(plexwebhooks.Payload)
-			if err := json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
-				webhook.err = fmt.Errorf("payload JSON decode failed: %w", err)
+			if err = json.Unmarshal(webhook.RawPayload, webhook.Payload); err != nil {
+				err = fmt.Errorf("payload JSON decode failed: %w", err)
 
 				return
 			}
 		case "thumb":
 			if webhook.Thumbnail != nil {
-				webhook.err = ErrMultipleThumbnailPart
+				err = ErrMultipleThumbnailPart
 
 				return
 			}
@@ -77,24 +77,24 @@ func ParsePlexWebhook(mpr *multipart.Reader) (webhook *WebhookResult) {
 			}
 
 			if webhook.Thumbnail.Data, err = ioutil.ReadAll(formPart); err != nil {
-				webhook.err = fmt.Errorf("error while reading thumb form part data: %w", err)
+				err = fmt.Errorf("error while reading thumb form part data: %w", err)
 
 				return
 			}
 		default:
-			webhook.err = UnexpectedFormPartError(formPart.FormName())
+			err = UnexpectedFormPartError(formPart.FormName())
 
 			return
 		}
 	}
 
-	if errors.Is(webhook.err, io.EOF) {
-		webhook.err = nil
+	if errors.Is(err, io.EOF) {
+		err = nil
 	}
 
-	if webhook.err == nil && webhook.Payload == nil {
-		webhook.err = ErrPayloadNotFound
+	if err == nil && webhook.Payload == nil {
+		err = ErrPayloadNotFound
 	}
 
-	return
+	return webhook, err
 }

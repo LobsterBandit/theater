@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS plex_webhooks (
 	date TEXT NOT NULL,
 	type TEXT NOT NULL,
 	user TEXT NOT NULL,
-	payload BLOB NOT NULL,
+	payload BLOB NOT NULL
 )
 `); err != nil {
 		log.Fatal(err)

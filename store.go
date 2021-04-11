@@ -49,7 +49,7 @@ ON plex_webhooks (id, date, type, user, player)`); err != nil {
 
 func (s *Store) Insert(webhook *WebhookResult) error {
 	if _, err := s.DB.Exec(
-		"INSERT INTO plex_webhooks (date, type, user, player, payload) VALUES(?, ?, ?, ?)",
+		"INSERT INTO plex_webhooks (date, type, user, player, payload) VALUES(?, ?, ?, ?, ?)",
 		time.Now().UTC().Format(time.RFC3339),
 		webhook.Payload.Event,
 		webhook.Payload.Account.Title,

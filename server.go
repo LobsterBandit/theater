@@ -6,46 +6,46 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type Server struct {
-	Port  string
-	Store *Store
+	Port   string
+	Router *chi.Mux
+	Store  *Store
 }
 
 func (s *Server) Start() {
-	s.setupRoutes()
+	s.configureRouter()
 
 	addr := fmt.Sprintf(":%s", s.Port)
 	log.Println("Starting server at", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(http.ListenAndServe(addr, s.Router))
 }
 
-func (s *Server) setupRoutes() {
-	http.HandleFunc("/ping", s.handlePing())
-	http.HandleFunc("/plex", s.handlePlexWebhook())
+func (s *Server) configureRouter() {
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Get("/ping", s.handlePing())
+	r.Post("/plex", s.handlePlexWebhook())
+
+	s.Router = r
 }
 
 func (s *Server) handlePing() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-
-			return
-		}
-
 		fmt.Fprintf(w, "pong")
 	}
 }
 
 func (s *Server) handlePlexWebhook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-
-			return
-		}
-
 		defer r.Body.Close()
 
 		multiPartReader, err := r.MultipartReader()

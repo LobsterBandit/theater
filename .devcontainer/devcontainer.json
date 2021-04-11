@@ -16,7 +16,13 @@
   "settings": {
     "go.lintOnSave": "file",
     "go.lintTool": "golangci-lint",
-    "go.lintFlags": ["--enable-all", "-D", "forbidigo", "-D", "lll", "-D", "funlen"],
+    "go.lintFlags": [
+      "--enable-all",
+      "-D", "forbidigo",
+      "-D", "lll",
+      "-D", "funlen",
+      "-D", "nakedret"
+    ],
     "go.useLanguageServer": true,
     "go.vetOnSave": "package",
     "[go]": {

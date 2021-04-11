@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -32,60 +33,69 @@ func (s *Server) configureRouter() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/ping", s.handlePing())
-	r.Post("/plex", s.handlePlexWebhook())
+	r.Get("/ping", s.ping)
+	r.Post("/plex", s.acceptPlexWebhook)
+	r.Get("/plex", s.listPlexWebhooks)
 
 	s.Router = r
 }
 
-func (s *Server) handlePing() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "pong")
+func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("pong"))
+}
+
+func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	multiPartReader, err := r.MultipartReader()
+	if err != nil {
+		if errors.Is(err, http.ErrNotMultipart) || errors.Is(err, http.ErrMissingBoundary) {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		log.Println("unable to create a multipart reader from request:", err)
+
+		return
+	}
+
+	result, err := ParseWebhook(multiPartReader)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
+		log.Println("unable to parse webhook request:", err)
+
+		return
+	}
+
+	log.Printf("received plex webhook: %s\n", result.Payload.Event)
+
+	if err := s.Store.Insert(result); err != nil {
+		log.Println("unable to save webhook:", err)
 	}
 }
 
-func (s *Server) handlePlexWebhook() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {
+	list, err := s.Store.GetAll()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 
-		multiPartReader, err := r.MultipartReader()
-		if err != nil {
-			if errors.Is(err, http.ErrNotMultipart) || errors.Is(err, http.ErrMissingBoundary) {
-				w.WriteHeader(http.StatusBadRequest)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-
-			_, wErr := w.Write([]byte(err.Error()))
-			if wErr != nil {
-				err = fmt.Errorf("request error: %v | write error: %v", err, wErr)
-			}
-
-			log.Println("unable to create a multipart reader from request:", err)
-
-			return
-		}
-
-		result, err := ParseWebhook(multiPartReader)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-
-			_, wErr := w.Write([]byte(err.Error()))
-			if wErr != nil {
-				err = fmt.Errorf("request error: %w | write error: %v", err, wErr)
-			}
-
-			log.Println("unable to parse webhook request:", err)
-
-			return
-		}
-
-		log.Printf("received plex webhook: %s\n", result.Payload.Event)
-
-		if err := s.Store.Insert(result); err != nil {
-			log.Println("unable to save webhook:", err)
-		}
+		return
 	}
+
+	listJSON, err := json.Marshal(list)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(listJSON)
 }
 
 func env(key, defaultValue string) string {

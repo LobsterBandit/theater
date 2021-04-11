@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -9,11 +10,18 @@ import (
 	"path"
 	"time"
 
+	"github.com/hekmon/plexwebhooks"
 	_ "modernc.org/sqlite"
 )
 
 type Store struct {
 	DB *sql.DB
+}
+
+type PlexWebhook struct {
+	ID      int                  `json:"id"`
+	Date    string               `json:"date"`
+	Payload plexwebhooks.Payload `json:"payload"`
 }
 
 func InitStore(dir string) *Store {
@@ -60,4 +68,43 @@ func (s *Store) Insert(webhook *WebhookResult) error {
 	}
 
 	return nil
+}
+
+func (s *Store) GetAll() (list []*PlexWebhook, err error) {
+	rows, err := s.DB.Query("SELECT id, date, payload FROM plex_webhooks ORDER BY id")
+	if err != nil {
+		err = fmt.Errorf("error querying plex webhooks: %w", err)
+
+		return
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var rawPayload []byte
+
+		plexWebhook := &PlexWebhook{}
+
+		if err = rows.Scan(&plexWebhook.ID, &plexWebhook.Date, &rawPayload); err != nil {
+			err = fmt.Errorf("error scanning query results: %w", err)
+
+			return
+		}
+
+		if err = json.Unmarshal(rawPayload, &plexWebhook.Payload); err != nil {
+			err = fmt.Errorf("error converting raw payload: %w", err)
+
+			return
+		}
+
+		list = append(list, plexWebhook)
+	}
+
+	if err = rows.Err(); err != nil {
+		err = fmt.Errorf("error iterating query rows: %w", err)
+
+		return
+	}
+
+	return
 }

@@ -13,13 +13,16 @@ import (
 )
 
 type Server struct {
-	Port   string
-	Router *chi.Mux
-	Store  *Store
+	WebhookActionHandler *ActionHandler
+	Port                 string
+	Router               *chi.Mux
+	Store                *Store
 }
 
 func (s *Server) Start() {
 	s.configureRouter()
+
+	s.configureWebhookActions()
 
 	addr := fmt.Sprintf(":%s", s.Port)
 	log.Println("Starting server at", addr)
@@ -38,6 +41,10 @@ func (s *Server) configureRouter() {
 	r.Get("/plex", s.listPlexWebhooks)
 
 	s.Router = r
+}
+
+func (s *Server) configureWebhookActions() {
+	s.WebhookActionHandler = &ActionHandler{}
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {

@@ -45,6 +45,7 @@ func (s *Server) configureRouter() {
 
 func (s *Server) configureWebhookActions() {
 	s.WebhookActionHandler = &ActionHandler{}
+	s.WebhookActionHandler.add(&HueAction{})
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -79,9 +80,13 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("received plex webhook: %s\n", result.Payload.Event)
 
-	if err := s.Store.Insert(result); err != nil {
-		log.Println("unable to save webhook:", err)
-	}
+	go s.WebhookActionHandler.processAll(result.Payload)
+
+	go func() {
+		if err := s.Store.Insert(result); err != nil {
+			log.Println("unable to save webhook:", err)
+		}
+	}()
 }
 
 func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {

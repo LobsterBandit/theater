@@ -45,7 +45,7 @@ func (s *Server) configureRouter() {
 
 func (s *Server) configureWebhookActions() {
 	s.WebhookActionHandler = &ActionHandler{}
-	s.WebhookActionHandler.add(&HueAction{})
+	s.WebhookActionHandler.add(DefaultLogAction())
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -77,8 +77,6 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	log.Printf("received plex webhook: %s\n", result.Payload.Event)
 
 	go s.WebhookActionHandler.processAll(result.Payload)
 

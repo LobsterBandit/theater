@@ -21,7 +21,8 @@
       "-D", "forbidigo",
       "-D", "lll",
       "-D", "funlen",
-      "-D", "nakedret"
+      "-D", "nakedret",
+      "-D", "exhaustivestruct"
     ],
     "go.useLanguageServer": true,
     "go.vetOnSave": "package",

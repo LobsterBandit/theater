@@ -13,13 +13,16 @@ import (
 )
 
 type Server struct {
-	Port   string
-	Router *chi.Mux
-	Store  *Store
+	WebhookActionHandler *ActionHandler
+	Port                 string
+	Router               *chi.Mux
+	Store                *Store
 }
 
 func (s *Server) Start() {
 	s.configureRouter()
+
+	s.configureWebhookActions()
 
 	addr := fmt.Sprintf(":%s", s.Port)
 	log.Println("Starting server at", addr)
@@ -38,6 +41,11 @@ func (s *Server) configureRouter() {
 	r.Get("/plex", s.listPlexWebhooks)
 
 	s.Router = r
+}
+
+func (s *Server) configureWebhookActions() {
+	s.WebhookActionHandler = &ActionHandler{}
+	s.WebhookActionHandler.add(DefaultLogAction())
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -70,11 +78,13 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("received plex webhook: %s\n", result.Payload.Event)
+	go s.WebhookActionHandler.processAll(result.Payload)
 
-	if err := s.Store.Insert(result); err != nil {
-		log.Println("unable to save webhook:", err)
-	}
+	go func() {
+		if err := s.Store.Insert(result); err != nil {
+			log.Println("unable to save webhook:", err)
+		}
+	}()
 }
 
 func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {

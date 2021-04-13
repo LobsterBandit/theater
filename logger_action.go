@@ -31,7 +31,7 @@ func DefaultLogAction() *LoggerAction {
 	return &LoggerAction{
 		log: func(p interface{}) {
 			switch w := p.(type) {
-			case plexwebhooks.Payload:
+			case *plexwebhooks.Payload:
 				log.Printf("received plex webhook event: %s", p)
 			default:
 				log.Printf("received webhook (%T): %v\n", w, p)

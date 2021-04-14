@@ -18,9 +18,11 @@ type Handler struct {
 	actions []Action
 }
 
-func (w *Handler) Add(a Action) {
-	log.Printf("Adding action %s: %s\n", a.kind(), a.describe())
-	w.actions = append(w.actions, a)
+func (w *Handler) Add(a ...Action) {
+	for _, action := range a {
+		log.Printf("Adding action %s: %s\n", action.kind(), action.describe())
+		w.actions = append(w.actions, action)
+	}
 }
 
 func (w *Handler) ProcessAll(p interface{}) {

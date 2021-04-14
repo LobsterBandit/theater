@@ -46,7 +46,11 @@ func (s *Server) configureRouter() {
 
 func (s *Server) configureActions() {
 	s.ActionHandler = &actions.Handler{}
-	s.ActionHandler.Add(actions.DefaultLogger())
+	webhookActions := []actions.Action{
+		actions.DefaultLogger(),
+		&actions.Hue{},
+	}
+	s.ActionHandler.Add(webhookActions...)
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {

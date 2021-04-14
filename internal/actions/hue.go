@@ -42,6 +42,7 @@ func (h *Hue) execute(p interface{}) {
 	}
 
 	log.Printf("Executing %s action in response to event %s\n", h.kind(), payload.Event)
+
 	for i, l := range h.Lights {
 		resp, err := h.Bridge.SetLightState(i, l)
 		if err != nil {

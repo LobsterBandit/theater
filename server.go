@@ -51,7 +51,7 @@ func (s *Server) configureActions() {
 	s.ActionHandler.Add(actions.DefaultLogger())
 
 	// add hue action only if ip and user are provided
-	bridgeIP, bridgeUser := env("Bridge_IP", ""), env("Bridge_User", "")
+	bridgeIP, bridgeUser := env("BRIDGE_IP", ""), env("BRIDGE_USER", "")
 	if bridgeIP != "" && bridgeUser != "" {
 		s.ActionHandler.Add(&actions.Hue{
 			Bridge:     huego.New(bridgeIP, bridgeUser),

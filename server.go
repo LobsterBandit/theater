@@ -53,34 +53,53 @@ func (s *Server) configureActions() {
 	// add hue action only if ip and user are provided
 	bridgeIP, bridgeUser := env("BRIDGE_IP", ""), env("BRIDGE_USER", "")
 	if bridgeIP != "" && bridgeUser != "" {
-		s.ActionHandler.Add(&actions.Hue{
-			Bridge:     huego.New(bridgeIP, bridgeUser),
-			PlexEvent:  plexwebhooks.EventTypePlay,
-			PlexPlayer: "SHIELD Android TV",
-			PlexUser:   "kwanzabot",
-			Lights: map[int]huego.State{
-				13: {On: true},  // TV Light
-				17: {On: false}, // Table 1
-				18: {On: false}, // Table 2
-				16: {On: false}, // Couch 2
-				12: {On: true},  // Kitchen Light
-				9:  {On: false}, // Couch 1
+		bridge := huego.New(bridgeIP, bridgeUser)
+		hueActions := []actions.Action{
+			&actions.Hue{
+				Bridge:     bridge,
+				PlexEvent:  plexwebhooks.EventTypePlay,
+				PlexPlayer: "SHIELD Android TV",
+				PlexUser:   "kwanzabot",
+				Lights: map[int]huego.State{
+					13: {On: true},  // TV Light
+					17: {On: false}, // Table 1
+					18: {On: false}, // Table 2
+					16: {On: false}, // Couch 2
+					12: {On: true},  // Kitchen Light
+					9:  {On: false}, // Couch 1
+				},
 			},
-		})
-		s.ActionHandler.Add(&actions.Hue{
-			Bridge:     huego.New(bridgeIP, bridgeUser),
-			PlexEvent:  plexwebhooks.EventTypePause,
-			PlexPlayer: "SHIELD Android TV",
-			PlexUser:   "kwanzabot",
-			Lights: map[int]huego.State{
-				13: {On: true}, // TV Light
-				17: {On: true}, // Table 1
-				18: {On: true}, // Table 2
-				16: {On: true}, // Couch 2
-				12: {On: true}, // Kitchen Light
-				9:  {On: true}, // Couch 1
+			&actions.Hue{
+				Bridge:     bridge,
+				PlexEvent:  plexwebhooks.EventTypeResume,
+				PlexPlayer: "SHIELD Android TV",
+				PlexUser:   "kwanzabot",
+				Lights: map[int]huego.State{
+					13: {On: true},  // TV Light
+					17: {On: false}, // Table 1
+					18: {On: false}, // Table 2
+					16: {On: false}, // Couch 2
+					12: {On: true},  // Kitchen Light
+					9:  {On: false}, // Couch 1
+				},
 			},
-		})
+			&actions.Hue{
+				Bridge:     bridge,
+				PlexEvent:  plexwebhooks.EventTypePause,
+				PlexPlayer: "SHIELD Android TV",
+				PlexUser:   "kwanzabot",
+				Lights: map[int]huego.State{
+					13: {On: true}, // TV Light
+					17: {On: true}, // Table 1
+					18: {On: true}, // Table 2
+					16: {On: true}, // Couch 2
+					12: {On: true}, // Kitchen Light
+					9:  {On: true}, // Couch 1
+				},
+			},
+		}
+
+		s.ActionHandler.Add(hueActions...)
 	}
 }
 

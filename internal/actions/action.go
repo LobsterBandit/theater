@@ -4,32 +4,32 @@ import (
 	"log"
 )
 
-type ActionKind string
+type Kind string
 
-type ActionDescription string
+type Description string
 
 type Action interface {
-	kind() ActionKind
-	describe() ActionDescription
+	kind() Kind
+	describe() Description
 	execute(p interface{})
 }
 
-type ActionHandler struct {
+type Handler struct {
 	actions []Action
 }
 
-func (w *ActionHandler) Add(a Action) {
+func (w *Handler) Add(a Action) {
 	log.Printf("Adding action %s: %s\n", a.kind(), a.describe())
 	w.actions = append(w.actions, a)
 }
 
-func (w *ActionHandler) ProcessAll(p interface{}) {
+func (w *Handler) ProcessAll(p interface{}) {
 	for _, a := range w.actions {
 		go a.execute(p)
 	}
 }
 
-func (w *ActionHandler) ProcessByKind(k ActionKind, p interface{}) {
+func (w *Handler) ProcessByKind(k Kind, p interface{}) {
 	for _, a := range w.actions {
 		if a.kind() == k {
 			go a.execute(p)

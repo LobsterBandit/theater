@@ -14,16 +14,16 @@ import (
 )
 
 type Server struct {
-	WebhookActionHandler *actions.ActionHandler
-	Port                 string
-	Router               *chi.Mux
-	Store                *Store
+	ActionHandler *actions.Handler
+	Port          string
+	Router        *chi.Mux
+	Store         *Store
 }
 
 func (s *Server) Start() {
 	s.configureRouter()
 
-	s.configureWebhookActions()
+	s.configureActions()
 
 	addr := fmt.Sprintf(":%s", s.Port)
 	log.Println("Starting server at", addr)
@@ -44,9 +44,9 @@ func (s *Server) configureRouter() {
 	s.Router = r
 }
 
-func (s *Server) configureWebhookActions() {
-	s.WebhookActionHandler = &actions.ActionHandler{}
-	s.WebhookActionHandler.Add(actions.DefaultLogger())
+func (s *Server) configureActions() {
+	s.ActionHandler = &actions.Handler{}
+	s.ActionHandler.Add(actions.DefaultLogger())
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.WebhookActionHandler.ProcessAll(result.Payload)
+	go s.ActionHandler.ProcessAll(result.Payload)
 
 	go func() {
 		if err := s.Store.Insert(result); err != nil {

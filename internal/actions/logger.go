@@ -7,28 +7,28 @@ import (
 )
 
 const (
-	LoggerActionKind        ActionKind        = "Logger"
-	LoggerActionDescription ActionDescription = "Log a webhook"
+	LoggerKind        Kind        = "Logger"
+	LoggerDescription Description = "Log a webhook"
 )
 
-type LoggerAction struct {
+type Logger struct {
 	log func(p interface{})
 }
 
-func (l *LoggerAction) kind() ActionKind {
-	return LoggerActionKind
+func (l *Logger) kind() Kind {
+	return LoggerKind
 }
 
-func (l *LoggerAction) describe() ActionDescription {
-	return LoggerActionDescription
+func (l *Logger) describe() Description {
+	return LoggerDescription
 }
 
-func (l *LoggerAction) execute(p interface{}) {
+func (l *Logger) execute(p interface{}) {
 	l.log(p)
 }
 
-func DefaultLogger() *LoggerAction {
-	return &LoggerAction{
+func DefaultLogger() *Logger {
+	return &Logger{
 		log: func(p interface{}) {
 			switch w := p.(type) {
 			case *plexwebhooks.Payload:

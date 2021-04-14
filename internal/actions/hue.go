@@ -44,11 +44,13 @@ func (h *Hue) execute(p interface{}) {
 	log.Printf("Executing %s action in response to event %s\n", h.kind(), payload.Event)
 
 	for i, l := range h.Lights {
-		resp, err := h.Bridge.SetLightState(i, l)
-		if err != nil {
-			log.Println(err)
-		}
+		go func(i int, l huego.State) {
+			resp, err := h.Bridge.SetLightState(i, l)
+			if err != nil {
+				log.Println(err)
+			}
 
-		log.Printf("%v\n", resp)
+			log.Printf("%v\n", resp)
+		}(i, l)
 	}
 }

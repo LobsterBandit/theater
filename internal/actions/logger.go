@@ -1,4 +1,4 @@
-package main
+package actions
 
 import (
 	"log"
@@ -27,7 +27,7 @@ func (l *LoggerAction) execute(p interface{}) {
 	l.log(p)
 }
 
-func DefaultLogAction() *LoggerAction {
+func DefaultLogger() *LoggerAction {
 	return &LoggerAction{
 		log: func(p interface{}) {
 			switch w := p.(type) {

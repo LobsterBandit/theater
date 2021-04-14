@@ -1,4 +1,4 @@
-package main
+package actions
 
 import (
 	"log"
@@ -18,18 +18,18 @@ type ActionHandler struct {
 	actions []Action
 }
 
-func (w *ActionHandler) add(a Action) {
+func (w *ActionHandler) Add(a Action) {
 	log.Printf("Adding action %s: %s\n", a.kind(), a.describe())
 	w.actions = append(w.actions, a)
 }
 
-func (w *ActionHandler) processAll(p interface{}) {
+func (w *ActionHandler) ProcessAll(p interface{}) {
 	for _, a := range w.actions {
 		go a.execute(p)
 	}
 }
 
-func (w *ActionHandler) processByKind(k ActionKind, p interface{}) {
+func (w *ActionHandler) ProcessByKind(k ActionKind, p interface{}) {
 	for _, a := range w.actions {
 		if a.kind() == k {
 			go a.execute(p)

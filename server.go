@@ -10,10 +10,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/lobsterbandit/theater/internal/actions"
 )
 
 type Server struct {
-	WebhookActionHandler *ActionHandler
+	WebhookActionHandler *actions.ActionHandler
 	Port                 string
 	Router               *chi.Mux
 	Store                *Store
@@ -44,8 +45,8 @@ func (s *Server) configureRouter() {
 }
 
 func (s *Server) configureWebhookActions() {
-	s.WebhookActionHandler = &ActionHandler{}
-	s.WebhookActionHandler.add(DefaultLogAction())
+	s.WebhookActionHandler = &actions.ActionHandler{}
+	s.WebhookActionHandler.Add(actions.DefaultLogger())
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +79,7 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.WebhookActionHandler.processAll(result.Payload)
+	go s.WebhookActionHandler.ProcessAll(result.Payload)
 
 	go func() {
 		if err := s.Store.Insert(result); err != nil {

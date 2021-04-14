@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/amimof/huego"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/hekmon/plexwebhooks"
 	"github.com/lobsterbandit/theater/internal/actions"
 )
 
@@ -46,11 +48,40 @@ func (s *Server) configureRouter() {
 
 func (s *Server) configureActions() {
 	s.ActionHandler = &actions.Handler{}
-	webhookActions := []actions.Action{
-		actions.DefaultLogger(),
-		&actions.Hue{},
+	s.ActionHandler.Add(actions.DefaultLogger())
+
+	// add hue action only if ip and user are provided
+	bridgeIP, bridgeUser := env("Bridge_IP", ""), env("Bridge_User", "")
+	if bridgeIP != "" && bridgeUser != "" {
+		s.ActionHandler.Add(&actions.Hue{
+			Bridge:     huego.New(bridgeIP, bridgeUser),
+			PlexEvent:  plexwebhooks.EventTypePlay,
+			PlexPlayer: "SHIELD Android TV",
+			PlexUser:   "kwanzabot",
+			Lights: map[int]huego.State{
+				13: {On: true},  // TV Light
+				17: {On: false}, // Table 1
+				18: {On: false}, // Table 2
+				16: {On: false}, // Couch 2
+				12: {On: true},  // Kitchen Light
+				9:  {On: false}, // Couch 1
+			},
+		})
+		s.ActionHandler.Add(&actions.Hue{
+			Bridge:     huego.New(bridgeIP, bridgeUser),
+			PlexEvent:  plexwebhooks.EventTypePause,
+			PlexPlayer: "SHIELD Android TV",
+			PlexUser:   "kwanzabot",
+			Lights: map[int]huego.State{
+				13: {On: true}, // TV Light
+				17: {On: true}, // Table 1
+				18: {On: true}, // Table 2
+				16: {On: true}, // Couch 2
+				12: {On: true}, // Kitchen Light
+				9:  {On: true}, // Couch 1
+			},
+		})
 	}
-	s.ActionHandler.Add(webhookActions...)
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {

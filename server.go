@@ -54,22 +54,23 @@ func (s *Server) configureActions() {
 	bridgeIP, bridgeUser := env("BRIDGE_IP", ""), env("BRIDGE_USER", "")
 	if bridgeIP != "" && bridgeUser != "" {
 		bridge := huego.New(bridgeIP, bridgeUser)
+		plexPlayer, plexUser := env("PLEX_PLAYER", ""), env("PLEX_USER", "")
 		hueActions := []actions.Action{
 			&actions.Hue{
 				Bridge:     bridge,
 				Group:      0,
 				Scene:      "oSEa7yRNILjLel0",
 				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePlay: {}, plex.EventTypeResume: {}},
-				PlexPlayer: "SHIELD Android TV",
-				PlexUser:   "kwanzabot",
+				PlexPlayer: plexPlayer,
+				PlexUser:   plexUser,
 			},
 			&actions.Hue{
 				Bridge:     bridge,
 				Group:      1,
 				Scene:      "XuQAIFCMsK9raFX",
 				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePause: {}, plex.EventTypeStop: {}},
-				PlexPlayer: "SHIELD Android TV",
-				PlexUser:   "kwanzabot",
+				PlexPlayer: plexPlayer,
+				PlexUser:   plexUser,
 			},
 		}
 

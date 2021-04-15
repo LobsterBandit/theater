@@ -8,21 +8,24 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/amimof/huego"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	plex "github.com/hekmon/plexwebhooks"
+	"github.com/lobsterbandit/theater/internal/actions"
 )
 
 type Server struct {
-	WebhookActionHandler *ActionHandler
-	Port                 string
-	Router               *chi.Mux
-	Store                *Store
+	ActionHandler *actions.Handler
+	Port          string
+	Router        *chi.Mux
+	Store         *Store
 }
 
 func (s *Server) Start() {
 	s.configureRouter()
 
-	s.configureWebhookActions()
+	s.configureActions()
 
 	addr := fmt.Sprintf(":%s", s.Port)
 	log.Println("Starting server at", addr)
@@ -43,9 +46,36 @@ func (s *Server) configureRouter() {
 	s.Router = r
 }
 
-func (s *Server) configureWebhookActions() {
-	s.WebhookActionHandler = &ActionHandler{}
-	s.WebhookActionHandler.add(DefaultLogAction())
+func (s *Server) configureActions() {
+	s.ActionHandler = &actions.Handler{}
+	s.ActionHandler.Add(actions.DefaultLogger())
+
+	// add hue action only if ip and user are provided
+	bridgeIP, bridgeUser := env("BRIDGE_IP", ""), env("BRIDGE_USER", "")
+	if bridgeIP != "" && bridgeUser != "" {
+		bridge := huego.New(bridgeIP, bridgeUser)
+		plexPlayer, plexUser := env("PLEX_PLAYER", ""), env("PLEX_USER", "")
+		hueActions := []actions.Action{
+			&actions.Hue{
+				Bridge:     bridge,
+				Group:      0,
+				Scene:      "oSEa7yRNILjLel0",
+				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePlay: {}, plex.EventTypeResume: {}},
+				PlexPlayer: plexPlayer,
+				PlexUser:   plexUser,
+			},
+			&actions.Hue{
+				Bridge:     bridge,
+				Group:      1,
+				Scene:      "XuQAIFCMsK9raFX",
+				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePause: {}, plex.EventTypeStop: {}},
+				PlexPlayer: plexPlayer,
+				PlexUser:   plexUser,
+			},
+		}
+
+		s.ActionHandler.Add(hueActions...)
+	}
 }
 
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +108,7 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.WebhookActionHandler.processAll(result.Payload)
+	go s.ActionHandler.ProcessAll(result.Payload)
 
 	go func() {
 		if err := s.Store.Insert(result); err != nil {

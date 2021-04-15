@@ -11,7 +11,7 @@ import (
 	"github.com/amimof/huego"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/hekmon/plexwebhooks"
+	plex "github.com/hekmon/plexwebhooks"
 	"github.com/lobsterbandit/theater/internal/actions"
 )
 
@@ -57,45 +57,19 @@ func (s *Server) configureActions() {
 		hueActions := []actions.Action{
 			&actions.Hue{
 				Bridge:     bridge,
-				PlexEvent:  plexwebhooks.EventTypePlay,
+				Group:      0,
+				Scene:      "oSEa7yRNILjLel0",
+				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePlay: {}, plex.EventTypeResume: {}},
 				PlexPlayer: "SHIELD Android TV",
 				PlexUser:   "kwanzabot",
-				Lights: map[int]huego.State{
-					13: {On: true},  // TV Light
-					17: {On: false}, // Table 1
-					18: {On: false}, // Table 2
-					16: {On: false}, // Couch 2
-					12: {On: true},  // Kitchen Light
-					9:  {On: false}, // Couch 1
-				},
 			},
 			&actions.Hue{
 				Bridge:     bridge,
-				PlexEvent:  plexwebhooks.EventTypeResume,
+				Group:      1,
+				Scene:      "XuQAIFCMsK9raFX",
+				PlexEvents: map[plex.EventType]struct{}{plex.EventTypePause: {}, plex.EventTypeStop: {}},
 				PlexPlayer: "SHIELD Android TV",
 				PlexUser:   "kwanzabot",
-				Lights: map[int]huego.State{
-					13: {On: true},  // TV Light
-					17: {On: false}, // Table 1
-					18: {On: false}, // Table 2
-					16: {On: false}, // Couch 2
-					12: {On: true},  // Kitchen Light
-					9:  {On: false}, // Couch 1
-				},
-			},
-			&actions.Hue{
-				Bridge:     bridge,
-				PlexEvent:  plexwebhooks.EventTypePause,
-				PlexPlayer: "SHIELD Android TV",
-				PlexUser:   "kwanzabot",
-				Lights: map[int]huego.State{
-					13: {On: true}, // TV Light
-					17: {On: true}, // Table 1
-					18: {On: true}, // Table 2
-					16: {On: true}, // Couch 2
-					12: {On: true}, // Kitchen Light
-					9:  {On: true}, // Couch 1
-				},
 			},
 		}
 

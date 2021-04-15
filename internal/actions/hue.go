@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/amimof/huego"
-	"github.com/hekmon/plexwebhooks"
+	plex "github.com/hekmon/plexwebhooks"
 )
 
 const (
@@ -14,10 +14,11 @@ const (
 
 type Hue struct {
 	Bridge     *huego.Bridge
-	PlexEvent  plexwebhooks.EventType
+	Group      int
+	Scene      string
+	PlexEvents map[plex.EventType]struct{}
 	PlexPlayer string
 	PlexUser   string
-	Lights     map[int]huego.State
 }
 
 func (h *Hue) kind() Kind {
@@ -29,28 +30,24 @@ func (h *Hue) describe() Description {
 }
 
 func (h *Hue) execute(p interface{}) {
-	payload, ok := p.(*plexwebhooks.Payload)
+	payload, ok := p.(*plex.Payload)
 	if !ok {
 		return
 	}
 
 	// Only act on events matching the desired user and player
-	if h.PlexUser != payload.Account.Title ||
-		h.PlexPlayer != payload.Player.Title ||
-		h.PlexEvent != payload.Event {
+	if payload.Account.Title != h.PlexUser || payload.Player.Title != h.PlexPlayer {
+		return
+	}
+
+	// Only act on events matching the desired event types
+	if _, ok := h.PlexEvents[payload.Event]; !ok {
 		return
 	}
 
 	log.Printf("Executing %s action in response to event %s\n", h.kind(), payload.Event)
 
-	for i, l := range h.Lights {
-		go func(i int, l huego.State) {
-			resp, err := h.Bridge.SetLightState(i, l)
-			if err != nil {
-				log.Println(err)
-			}
-
-			log.Printf("%v\n", resp)
-		}(i, l)
+	if _, err := h.Bridge.RecallScene(h.Scene, h.Group); err != nil {
+		log.Println(err)
 	}
 }

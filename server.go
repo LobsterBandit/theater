@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/amimof/huego"
 	"github.com/go-chi/chi/v5"
@@ -42,6 +43,16 @@ func (s *Server) configureRouter() {
 	r.Get("/ping", s.ping)
 	r.Post("/plex", s.acceptPlexWebhook)
 	r.Get("/plex", s.listPlexWebhooks)
+
+	// serve SPA
+	webDir := http.Dir("./web")
+
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(webDir))
+		fs.ServeHTTP(w, r)
+	})
 
 	s.Router = r
 }

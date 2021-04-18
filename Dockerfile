@@ -1,3 +1,15 @@
+FROM node:current-alpine as ui-builder
+
+WORKDIR /tmp/ui
+
+COPY ui/package*.json ./
+
+RUN npm ci --no-audit --no-fund --loglevel error
+
+COPY ui/ ./
+
+RUN npm run build
+
 FROM golang:alpine as builder
 
 WORKDIR /tmp/build
@@ -15,6 +27,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 FROM gcr.io/distroless/static as final
 
-COPY --from=builder /tmp/build/theater /go/bin/theater
+COPY --from=builder /tmp/build/theater /theater
+COPY --from=ui-builder /tmp/ui/build /web
 
-ENTRYPOINT ["/go/bin/theater"]
+ENTRYPOINT ["/theater"]

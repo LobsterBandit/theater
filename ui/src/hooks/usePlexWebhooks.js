@@ -1,9 +1,16 @@
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 
 const initialState = {
   loading: true,
   plexWebhooks: [],
+  total: 0,
   error: null,
+  pagination: {
+    pageIndex: 0,
+    pageSize: 10,
+    orderBy: "id",
+    sortBy: "asc",
+  },
 };
 
 function reducer(state, action) {
@@ -24,24 +31,66 @@ function reducer(state, action) {
       return {
         loading: false,
         plexWebhooks: action.payload,
+        total: -1,
         error: null,
+      };
+    case "UPDATE_PAGINATION":
+      return {
+        ...state,
+        pagination: {
+          ...state.pagination,
+          ...action.payload,
+        },
       };
     default:
       return state;
   }
 }
 
-export function usePlexWebhooks() {
-  const [shouldFetch, setShouldFetch] = useState(true);
-  const [state, dispatch] = useReducer(reducer, initialState);
+function buildURL({ pageIndex, pageSize, orderBy, sortBy }) {
+  const baseURL = "/plex";
+  return pageIndex >= 0 && pageSize && orderBy && sortBy
+    ? `${baseURL}?limit=${pageSize}&offset=${
+        pageIndex * pageSize
+      }&orderBy=${orderBy}&sortBy=${sortBy}`
+    : baseURL;
+}
 
-  const refetch = () => setShouldFetch(true);
+export function usePlexWebhooks({
+  fetchOnMount = false,
+  pageIndex,
+  pageSize,
+  orderBy,
+  sortBy,
+} = {}) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    {
+      ...initialState,
+      pagination: {
+        ...initialState.pagination,
+        pageIndex,
+        pageSize,
+        orderBy,
+        sortBy,
+      },
+      fetchOnMount,
+    },
+    (args) => ({
+      ...args,
+      loading: args.fetchOnMount,
+      pagination: {
+        ...args.pagination,
+      },
+    })
+  );
 
-  useEffect(() => {
-    async function fetchPlexWebhooks() {
+  const fetchPlexWebhooks = useCallback(
+    async ({ pageIndex, pageSize, orderBy, sortBy }) => {
       dispatch({ type: "FETCH_START" });
       try {
-        const resp = await fetch("/plex");
+        const url = buildURL({ pageIndex, pageSize, orderBy, sortBy });
+        const resp = await fetch(url);
         const respData = await resp.json();
         if (respData) {
           dispatch({ type: "FETCH_SUCCESS", payload: respData });
@@ -49,13 +98,17 @@ export function usePlexWebhooks() {
       } catch (error) {
         console.error(error);
         dispatch({ type: "FETCH_ERROR", payload: error });
-      } finally {
-        setShouldFetch(false);
       }
-    }
+    },
+    []
+  );
 
-    shouldFetch && fetchPlexWebhooks();
-  }, [shouldFetch]);
+  useEffect(() => {
+    fetchOnMount && fetchPlexWebhooks({ pageIndex, pageSize, orderBy, sortBy });
+  }, [fetchOnMount, fetchPlexWebhooks, orderBy, pageIndex, pageSize, sortBy]);
 
-  return [state, refetch];
+  return {
+    ...state,
+    fetchPlexWebhooks,
+  };
 }

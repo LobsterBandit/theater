@@ -4,7 +4,11 @@ import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
 import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
 
 export function PlexWebhooks() {
-  const [{ plexWebhooks }, refetch] = usePlexWebhooks();
+  const {
+    state: { loading, plexWebhooks, total },
+    fetchPlexWebhooks,
+    options,
+  } = usePlexWebhooks();
 
   return (
     <Box
@@ -16,8 +20,16 @@ export function PlexWebhooks() {
       p={2}
     >
       <Paper elevation={4} sx={{ padding: "16px" }}>
-        <PlexWebhookToolbar onRefreshClick={refetch} />
-        <PlexWebhookTable data={plexWebhooks} />
+        <PlexWebhookToolbar
+          loading={loading}
+          onRefreshClick={() => fetchPlexWebhooks(options)}
+        />
+        <PlexWebhookTable
+          data={plexWebhooks}
+          fetchData={fetchPlexWebhooks}
+          loading={loading}
+          totalCount={total}
+        />
       </Paper>
     </Box>
   );

@@ -8,6 +8,7 @@ import {
   TablePagination,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import { useEffect } from "react";
 import { usePagination, useTable } from "react-table";
 
 const columns = [
@@ -35,7 +36,7 @@ const columns = [
   },
 ];
 
-export function PlexWebhookTable({ data }) {
+export function PlexWebhookTable({ data, fetchData, loading, totalCount }) {
   const {
     getTableProps,
     getTableBodyProps,
@@ -52,10 +53,16 @@ export function PlexWebhookTable({ data }) {
     {
       columns,
       data,
-      initialState: { hiddenColumns: ["payload"], pageIndex: 0 },
+      initialState: { hiddenColumns: ["payload"], pageIndex: 0, pageSize: 10 },
+      manualPagination: true,
+      pageCount: totalCount === -1 ? totalCount : totalCount / 10,
     },
     usePagination
   );
+
+  useEffect(() => {
+    fetchData({ pageIndex, pageSize });
+  }, [fetchData, pageIndex, pageSize]);
 
   return (
     <>
@@ -99,10 +106,10 @@ export function PlexWebhookTable({ data }) {
           />
         )}
         component="div"
-        count={data.length}
+        count={totalCount === -1 ? totalCount : data.length}
         labelDisplayedRows={({ from, to, count, page }) =>
           `Page: ${page + 1} of ${
-            pageCount < 1
+            pageCount === 0
               ? 1
               : count !== -1
               ? pageCount

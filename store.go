@@ -18,6 +18,13 @@ type Store struct {
 	DB *sql.DB
 }
 
+type PaginationOptions struct {
+	Limit   int    `json:"limit"`
+	Offset  int    `json:"offset"`
+	OrderBy string `json:"orderBy"`
+	SortBy  string `json:"sortBy"`
+}
+
 type PlexWebhook struct {
 	ID      int                  `json:"id"`
 	Date    string               `json:"date"`
@@ -78,6 +85,24 @@ func (s *Store) GetAll() (list []*PlexWebhook, err error) {
 		return
 	}
 
+	return mapRowsToPlexWebhooks(rows)
+}
+
+func (s *Store) GetAllPaginated(options *PaginationOptions) ([]*PlexWebhook, error) {
+	// sqlite doesn't like consecutive space-separated parameters, i.e. ORDER BY ? ?, and throws syntax error on the second ?
+	rows, err := s.DB.Query(
+		"SELECT id, date, payload FROM plex_webhooks ORDER BY ? LIMIT ? OFFSET ?",
+		fmt.Sprintf("%s %s", options.OrderBy, options.SortBy), options.Limit, options.Offset)
+	if err != nil {
+		err = fmt.Errorf("error querying plex webhooks: %w", err)
+
+		return nil, err
+	}
+
+	return mapRowsToPlexWebhooks(rows)
+}
+
+func mapRowsToPlexWebhooks(rows *sql.Rows) (list []*PlexWebhook, err error) {
 	defer rows.Close()
 
 	for rows.Next() {

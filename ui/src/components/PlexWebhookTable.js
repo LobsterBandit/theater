@@ -5,8 +5,10 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TablePagination,
 } from "@material-ui/core";
-import { useTable } from "react-table";
+import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import { usePagination, useTable } from "react-table";
 
 const columns = [
   { Header: "ID", accessor: "id" },
@@ -38,45 +40,83 @@ export function PlexWebhookTable({ data }) {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    rows,
+    page,
     prepareRow,
-  } = useTable({
-    columns,
-    data,
-    initialState: { hiddenColumns: ["payload"] },
-  });
+
+    // pagination
+    pageCount,
+    gotoPage,
+    setPageSize,
+    state: { pageIndex, pageSize },
+  } = useTable(
+    {
+      columns,
+      data,
+      initialState: { hiddenColumns: ["payload"], pageIndex: 0 },
+    },
+    usePagination
+  );
 
   return (
-    <TableContainer sx={{ maxHeight: "75vh" }}>
-      <Table size="small" stickyHeader {...getTableProps()}>
-        <TableHead>
-          {headerGroups.map((headerGroup) => (
-            <TableRow {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <TableCell {...column.getHeaderProps()}>
-                  {column.render("Header")}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableHead>
-        <TableBody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <TableRow hover {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  return (
-                    <TableCell {...cell.getCellProps()}>
-                      {cell.render("Cell")}
-                    </TableCell>
-                  );
-                })}
+    <>
+      <TableContainer sx={{ maxHeight: "75vh" }}>
+        <Table size="small" stickyHeader {...getTableProps()}>
+          <TableHead>
+            {headerGroups.map((headerGroup) => (
+              <TableRow {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
+                  <TableCell {...column.getHeaderProps()}>
+                    {column.render("Header")}
+                  </TableCell>
+                ))}
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+            ))}
+          </TableHead>
+          <TableBody {...getTableBodyProps()}>
+            {page.map((row) => {
+              prepareRow(row);
+              return (
+                <TableRow hover {...row.getRowProps()}>
+                  {row.cells.map((cell) => {
+                    return (
+                      <TableCell {...cell.getCellProps()}>
+                        {cell.render("Cell")}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        ActionsComponent={({ ...props }) => (
+          <TablePaginationActions
+            {...props}
+            showFirstButton={true}
+            showLastButton={true}
+          />
+        )}
+        component="div"
+        count={data.length}
+        labelDisplayedRows={({ from, to, count, page }) =>
+          `Page: ${page + 1} of ${
+            pageCount < 1
+              ? 1
+              : count !== -1
+              ? pageCount
+              : `more than ${page + 1}`
+          } | Rows: ${from}-${to} of ${
+            count !== -1 ? count : `more than ${to}`
+          }`
+        }
+        onRowsPerPageChange={(e) => setPageSize(Number(e.target.value))}
+        onPageChange={(e, page) => gotoPage(page)}
+        page={pageIndex}
+        rowsPerPage={pageSize}
+        rowsPerPageOptions={[10, 25, 50, { label: "All", value: -1 }]}
+      />
+    </>
   );
 }

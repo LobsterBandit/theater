@@ -4,7 +4,7 @@ WORKDIR /tmp/ui
 
 COPY ui/package*.json ./
 
-RUN npm ci
+RUN npm --silent ci --no-audit --no-fund
 
 COPY ui/ ./
 

@@ -4,7 +4,7 @@ WORKDIR /tmp/ui
 
 COPY ui/package*.json ./
 
-RUN npm --silent ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund --loglevel error
 
 COPY ui/ ./
 
@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
       -ldflags='-w -s -extldflags "-static"' -a \
       -o theater .
 
-FROM gcr.io/distroless/static:debug as final
+FROM gcr.io/distroless/static as final
 
 COPY --from=builder /tmp/build/theater /theater
 COPY --from=ui-builder /tmp/ui/build /web

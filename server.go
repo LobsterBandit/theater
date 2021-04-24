@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/amimof/huego"
@@ -15,6 +16,8 @@ import (
 	plex "github.com/hekmon/plexwebhooks"
 	"github.com/lobsterbandit/theater/internal/actions"
 )
+
+var ErrRetrievingPlexWebhooks = errors.New("error retrieving plex webhooks")
 
 type Server struct {
 	ActionHandler *actions.Handler
@@ -129,18 +132,40 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {
-	list, err := s.Store.GetAll()
+	var list []*PlexWebhook
+
+	var err error
+
+	if queryParams := r.URL.Query(); len(queryParams) > 0 {
+		log.Println(queryParams)
+
+		limit, _ := strconv.Atoi(queryParams.Get("limit"))
+		offset, _ := strconv.Atoi(queryParams.Get("offset"))
+		options := &PaginationOptions{
+			Limit:   limit,
+			Offset:  offset,
+			OrderBy: queryParams.Get("orderBy"),
+			SortBy:  queryParams.Get("sortBy"),
+		}
+
+		list, err = s.Store.GetAllPaginated(options)
+	} else {
+		list, err = s.Store.GetAll()
+	}
+
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(ErrRetrievingPlexWebhooks.Error()))
 
 		return
 	}
 
 	listJSON, err := json.Marshal(list)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(ErrRetrievingPlexWebhooks.Error()))
 
 		return
 	}

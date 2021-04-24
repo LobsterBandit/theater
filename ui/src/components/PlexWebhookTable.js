@@ -4,9 +4,14 @@ import {
   TableContainer,
   TableCell,
   TableHead,
+  TablePagination,
   TableRow,
 } from "@material-ui/core";
-import { useTable } from "react-table";
+import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import { useEffect } from "react";
+import { usePagination, useTable } from "react-table";
+import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
+import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
 
 const columns = [
   { Header: "ID", accessor: "id" },
@@ -33,50 +38,117 @@ const columns = [
   },
 ];
 
-export function PlexWebhookTable({ data }) {
+export function PlexWebhookTable() {
+  const {
+    fetchPlexWebhooks,
+    pagination,
+    plexWebhooks,
+    setPagination,
+    total,
+  } = usePlexWebhooks();
+
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    rows,
+    page,
     prepareRow,
-  } = useTable({
-    columns,
-    data,
-    initialState: { hiddenColumns: ["payload"] },
-  });
+
+    // pagination
+    pageCount,
+    gotoPage,
+    setPageSize,
+    state: { pageIndex, pageSize },
+  } = useTable(
+    {
+      columns,
+      data: plexWebhooks,
+      initialState: {
+        hiddenColumns: ["payload"],
+        pageIndex: pagination.pageIndex,
+        pageSize: pagination.pageSize,
+      },
+      manualPagination: true,
+      pageCount: total === -1 ? total : total / 10,
+    },
+    usePagination
+  );
+
+  useEffect(() => {
+    fetchPlexWebhooks({ pageIndex, pageSize });
+  }, [fetchPlexWebhooks, pageIndex, pageSize]);
 
   return (
-    <TableContainer sx={{ maxHeight: "75vh" }}>
-      <Table size="small" stickyHeader {...getTableProps()}>
-        <TableHead>
-          {headerGroups.map((headerGroup) => (
-            <TableRow {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <TableCell {...column.getHeaderProps()}>
-                  {column.render("Header")}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableHead>
-        <TableBody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <TableRow hover {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  return (
-                    <TableCell {...cell.getCellProps()}>
-                      {cell.render("Cell")}
-                    </TableCell>
-                  );
-                })}
+    <>
+      <PlexWebhookToolbar
+        onRefreshClick={() => fetchPlexWebhooks(pagination)}
+      />
+      <TableContainer sx={{ maxHeight: "75vh" }}>
+        <Table component="div" size="small" stickyHeader {...getTableProps()}>
+          <TableHead component="div">
+            {headerGroups.map((headerGroup) => (
+              <TableRow component="div" {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
+                  <TableCell component="div" {...column.getHeaderProps()}>
+                    {column.render("Header")}
+                  </TableCell>
+                ))}
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+            ))}
+          </TableHead>
+          <TableBody component="div" {...getTableBodyProps()}>
+            {page.map((row) => {
+              prepareRow(row);
+              return (
+                <TableRow component="div" hover {...row.getRowProps()}>
+                  {row.cells.map((cell) => {
+                    return (
+                      <TableCell component="div" {...cell.getCellProps()}>
+                        {cell.render("Cell")}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        ActionsComponent={({ ...props }) => (
+          <TablePaginationActions
+            {...props}
+            showFirstButton={true}
+            showLastButton={true}
+          />
+        )}
+        component="div"
+        count={total === -1 ? total : plexWebhooks.length}
+        labelDisplayedRows={({ from, to, count, page }) => {
+          console.log({ page, pageCount, count, from, to });
+          return `Page: ${page + 1} of ${
+            pageCount === 0
+              ? 1
+              : count !== -1
+              ? pageCount
+              : `more than ${page + 1}`
+          } | Rows: ${from}-${to} of ${
+            count !== -1 ? count : `more than ${to}`
+          }`;
+        }}
+        onRowsPerPageChange={(e) => {
+          const pageSize = Number(e.target.value);
+          setPagination({ pageSize });
+          setPageSize(pageSize);
+        }}
+        onPageChange={(e, page) => {
+          setPagination({ pageIndex: page });
+          gotoPage(page);
+        }}
+        page={pageIndex}
+        rowsPerPage={pageSize}
+        rowsPerPageOptions={[10, 25, 50, { label: "All", value: -1 }]}
+      />
+    </>
   );
 }

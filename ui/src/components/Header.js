@@ -4,7 +4,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 export function Header() {
   return (
     <AppBar component="header" position="static">
-      <Toolbar>
+      <Toolbar variant="dense">
         <IconButton
           edge="start"
           color="inherit"

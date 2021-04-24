@@ -55,7 +55,6 @@ export function PlexWebhookTable() {
     prepareRow,
 
     // pagination
-    pageCount,
     gotoPage,
     setPageSize,
     state: { pageIndex, pageSize },
@@ -69,7 +68,7 @@ export function PlexWebhookTable() {
         pageSize: pagination.pageSize,
       },
       manualPagination: true,
-      pageCount: total === -1 ? total : total / 10,
+      pageCount: total === -1 ? total : total / pagination.pageSize,
     },
     usePagination
   );
@@ -123,18 +122,21 @@ export function PlexWebhookTable() {
           />
         )}
         component="div"
-        count={total === -1 ? total : plexWebhooks.length}
+        count={
+          total === -1 && plexWebhooks.length === pageSize
+            ? total
+            : pageIndex * pageSize + plexWebhooks.length
+        }
         labelDisplayedRows={({ from, to, count, page }) => {
-          console.log({ page, pageCount, count, from, to });
-          return `Page: ${page + 1} of ${
-            pageCount === 0
-              ? 1
-              : count !== -1
-              ? pageCount
-              : `more than ${page + 1}`
-          } | Rows: ${from}-${to} of ${
+          const pageText = `Page: ${page + 1} of ${
+            count !== -1 ? page + 1 : `more than ${page + 1}`
+          }`;
+
+          const rowText = `Rows: ${from}-${count !== -1 ? count : to} of ${
             count !== -1 ? count : `more than ${to}`
           }`;
+
+          return `${pageText} | ${rowText}`;
         }}
         onRowsPerPageChange={(e) => {
           const pageSize = Number(e.target.value);

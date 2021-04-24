@@ -6,7 +6,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Skeleton,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
 import { useEffect } from "react";
@@ -41,7 +40,6 @@ const columns = [
 
 export function PlexWebhookTable() {
   const {
-    loading,
     fetchPlexWebhooks,
     pagination,
     plexWebhooks,
@@ -83,7 +81,6 @@ export function PlexWebhookTable() {
   return (
     <>
       <PlexWebhookToolbar
-        loading={loading}
         onRefreshClick={() => fetchPlexWebhooks(pagination)}
       />
       <TableContainer sx={{ maxHeight: "75vh" }}>
@@ -107,11 +104,7 @@ export function PlexWebhookTable() {
                   {row.cells.map((cell) => {
                     return (
                       <TableCell component="div" {...cell.getCellProps()}>
-                        {loading ? (
-                          <Skeleton variant="text" />
-                        ) : (
-                          cell.render("Cell")
-                        )}
+                        {cell.render("Cell")}
                       </TableCell>
                     );
                   })}

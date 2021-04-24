@@ -29,9 +29,10 @@ function reducer(state, action) {
       };
     case "FETCH_SUCCESS":
       return {
+        ...state,
         loading: false,
         plexWebhooks: action.payload,
-        total: -1,
+        total: action.payload.total ?? -1,
         error: null,
       };
     case "UPDATE_PAGINATION":
@@ -47,9 +48,14 @@ function reducer(state, action) {
   }
 }
 
-function buildURL({ pageIndex, pageSize, orderBy, sortBy }) {
+function buildURL({
+  pageIndex,
+  pageSize,
+  orderBy = initialState.pagination.orderBy,
+  sortBy = initialState.pagination.sortBy,
+}) {
   const baseURL = "/plex";
-  return pageIndex >= 0 && pageSize && orderBy && sortBy
+  return pageIndex >= 0 && pageSize !== -1
     ? `${baseURL}?limit=${pageSize}&offset=${
         pageIndex * pageSize
       }&orderBy=${orderBy}&sortBy=${sortBy}`
@@ -58,28 +64,27 @@ function buildURL({ pageIndex, pageSize, orderBy, sortBy }) {
 
 export function usePlexWebhooks({
   fetchOnMount = false,
-  pageIndex,
-  pageSize,
-  orderBy,
-  sortBy,
+  pageIndex = initialState.pagination.pageIndex,
+  pageSize = initialState.pagination.pageSize,
+  orderBy = initialState.pagination.orderBy,
+  sortBy = initialState.pagination.sortBy,
 } = {}) {
   const [state, dispatch] = useReducer(
     reducer,
     {
-      ...initialState,
+      loading: fetchOnMount,
       pagination: {
-        ...initialState.pagination,
         pageIndex,
         pageSize,
         orderBy,
         sortBy,
       },
-      fetchOnMount,
     },
     (args) => ({
-      ...args,
-      loading: args.fetchOnMount,
+      ...initialState,
+      loading: args.loading,
       pagination: {
+        ...initialState.pagination,
         ...args.pagination,
       },
     })
@@ -103,6 +108,10 @@ export function usePlexWebhooks({
     []
   );
 
+  const setPagination = useCallback((paginationOptions) => {
+    dispatch({ type: "UPDATE_PAGINATION", payload: paginationOptions });
+  }, []);
+
   useEffect(() => {
     fetchOnMount && fetchPlexWebhooks({ pageIndex, pageSize, orderBy, sortBy });
   }, [fetchOnMount, fetchPlexWebhooks, orderBy, pageIndex, pageSize, sortBy]);
@@ -110,5 +119,6 @@ export function usePlexWebhooks({
   return {
     ...state,
     fetchPlexWebhooks,
+    setPagination,
   };
 }

@@ -17,6 +17,8 @@ import (
 	"github.com/lobsterbandit/theater/internal/actions"
 )
 
+var ErrRetrievingPlexWebhooks = errors.New("error retrieving plex webhooks")
+
 type Server struct {
 	ActionHandler *actions.Handler
 	Port          string
@@ -154,7 +156,7 @@ func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(ErrRetrievingPlexWebhooks.Error()))
 
 		return
 	}
@@ -163,7 +165,7 @@ func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(ErrRetrievingPlexWebhooks.Error()))
 
 		return
 	}

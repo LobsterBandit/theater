@@ -8,9 +8,10 @@ import {
   TableRow,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePagination, useTable } from "react-table";
 import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
+import { WebhookPayloadDialog } from "./WebhookPayloadDialog";
 import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
 
 const columns = [
@@ -73,12 +74,30 @@ export function PlexWebhookTable() {
     usePagination
   );
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPayload, setSelectedPayload] = useState({});
+
+  const openDialog = (data) => {
+    setSelectedPayload(data);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setSelectedPayload({});
+    setDialogOpen(false);
+  };
+
   useEffect(() => {
     fetchPlexWebhooks({ pageIndex, pageSize });
   }, [fetchPlexWebhooks, pageIndex, pageSize]);
 
   return (
     <>
+      <WebhookPayloadDialog
+        handleClose={handleDialogClose}
+        open={dialogOpen}
+        value={selectedPayload}
+      />
       <PlexWebhookToolbar
         onRefreshClick={() => fetchPlexWebhooks(pagination)}
       />
@@ -99,7 +118,12 @@ export function PlexWebhookTable() {
             {page.map((row) => {
               prepareRow(row);
               return (
-                <TableRow component="div" hover {...row.getRowProps()}>
+                <TableRow
+                  component="div"
+                  hover
+                  onClick={() => openDialog(row.original)}
+                  {...row.getRowProps()}
+                >
                   {row.cells.map((cell) => {
                     return (
                       <TableCell component="div" {...cell.getCellProps()}>

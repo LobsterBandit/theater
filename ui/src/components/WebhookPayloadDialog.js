@@ -1,9 +1,36 @@
-import { Dialog, DialogContent, DialogTitle } from "@material-ui/core";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Typography,
+} from "@material-ui/core";
+import Close from "@material-ui/icons/Close";
 
-export function WebhookPayloadDialog({ handleClose, open, value }) {
+export function WebhookPayloadDialog({
+  handleClose,
+  handleReplay,
+  open,
+  value,
+}) {
   return (
     <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Plex Webhook Payload</DialogTitle>
+      <DialogTitle
+        disableTypography
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="h6">Plex Webhook Payload</Typography>
+        <IconButton onClick={handleClose}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
       <DialogContent
         style={{
           fontSize: "12px",
@@ -13,6 +40,18 @@ export function WebhookPayloadDialog({ handleClose, open, value }) {
       >
         {JSON.stringify(value, null, 2)}
       </DialogContent>
+      <DialogActions>
+        <Button
+          color="primary"
+          onClick={() => {
+            handleReplay?.();
+            console.log("Dialog replay click", value);
+          }}
+          variant="contained"
+        >
+          Replay Event
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

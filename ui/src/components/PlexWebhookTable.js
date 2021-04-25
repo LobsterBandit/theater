@@ -6,8 +6,11 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  IconButton,
+  Tooltip,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import Replay from "@material-ui/icons/Replay";
 import { useEffect, useState } from "react";
 import { usePagination, useTable } from "react-table";
 import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
@@ -23,19 +26,23 @@ const columns = [
   { Header: "Type", accessor: "payload.Metadata.type" },
   { Header: "Title", accessor: "payload.Metadata.title" },
   {
-    Header: "Payload",
-    accessor: "payload",
-    Cell: ({ value }) => (
-      <pre
-        style={{
-          whiteSpace: "pre-wrap",
-          wordWrap: "break-word",
-          background: "lightgray",
-        }}
-      >
-        {JSON.stringify(value, null, 2)}
-      </pre>
-    ),
+    Header: "Replay",
+    id: "replay",
+    Cell: ({ row: { original } }) => {
+      return (
+        <Tooltip title="Replay event">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("Row replay click", original);
+            }}
+            size="small"
+          >
+            <Replay />
+          </IconButton>
+        </Tooltip>
+      );
+    },
   },
 ];
 
@@ -126,7 +133,15 @@ export function PlexWebhookTable() {
                 >
                   {row.cells.map((cell) => {
                     return (
-                      <TableCell component="div" {...cell.getCellProps()}>
+                      <TableCell
+                        component="div"
+                        {...cell.getCellProps({
+                          style: cell.column.id === "replay" && {
+                            padding: 0,
+                            textAlign: "center",
+                          },
+                        })}
+                      >
                         {cell.render("Cell")}
                       </TableCell>
                     );

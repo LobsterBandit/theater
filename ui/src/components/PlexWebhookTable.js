@@ -29,9 +29,13 @@ const columns = [
   {
     Header: "Replay",
     id: "replay",
-    Cell: ({ row: { original } }) => {
+    Cell: () => {
       return (
-        <Tooltip placement="left" title="Replay event">
+        <Tooltip
+          disableInteractive={true}
+          placement="left"
+          title="Replay event"
+        >
           <IconButton size="small">
             <Replay />
           </IconButton>
@@ -140,13 +144,18 @@ export function PlexWebhookTable() {
                         component="div"
                         {...cell.getCellProps({
                           ...(cell.column.id === "replay" && {
+                            "data-eventsrc": "table-cell",
                             style: {
                               padding: 0,
                               textAlign: "center",
                             },
                             onClick: (e) => {
-                              e.stopPropagation();
-                              handleReplay(e, row.original.payload);
+                              if (
+                                e.target.dataset["eventsrc"] !== "table-cell"
+                              ) {
+                                e.stopPropagation();
+                                handleReplay(e, row.original.payload);
+                              }
                             },
                           }),
                         })}

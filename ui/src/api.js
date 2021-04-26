@@ -13,5 +13,5 @@ export async function replayPlexWebhook(payload) {
     throw new Error(response.statusText);
   }
 
-  return `Successfully replayed Plex ${payload.event} webhook`;
+  return `Successfully replayed ${payload.event} webhook`;
 }

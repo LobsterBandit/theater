@@ -1,4 +1,7 @@
 import {
+  Alert,
+  IconButton,
+  Snackbar,
   Table,
   TableBody,
   TableContainer,
@@ -6,7 +9,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  IconButton,
   Tooltip,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
@@ -82,6 +84,12 @@ export function PlexWebhookTable() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPayload, setSelectedPayload] = useState({});
+  const [snackState, setSnackState] = useState({
+    open: false,
+    message: "",
+    key: null,
+    severity: "info",
+  });
 
   const openDialog = (data) => {
     setSelectedPayload(data);
@@ -95,9 +103,29 @@ export function PlexWebhookTable() {
 
   const handleReplay = (e, payload) => {
     e.stopPropagation();
+    setSnackState({
+      open: true,
+      message: `Replaying ${payload.event} webhook...`,
+      severity: "info",
+      key: Date.now(),
+    });
     replayPlexWebhook(payload)
-      .then((r) => console.log(r))
-      .catch((e) => console.error(e));
+      .then((message) => {
+        setSnackState({
+          open: true,
+          message,
+          severity: "success",
+          key: Date.now(),
+        });
+      })
+      .catch((error) => {
+        setSnackState({
+          open: true,
+          message: error,
+          severity: "error",
+          key: Date.now(),
+        });
+      });
   };
 
   useEffect(() => {
@@ -106,6 +134,27 @@ export function PlexWebhookTable() {
 
   return (
     <>
+      <Snackbar
+        key={snackState.key}
+        anchorOrigin={{ horizontal: "center", vertical: "top" }}
+        autoHideDuration={5000}
+        open={snackState.open}
+        onClose={(e, reason) => {
+          if (reason === "clickaway") {
+            return;
+          }
+          setSnackState({
+            open: false,
+            message: "",
+            key: null,
+            severity: "info",
+          });
+        }}
+      >
+        <Alert severity={snackState.severity} variant="filled">
+          {snackState.message}
+        </Alert>
+      </Snackbar>
       <WebhookPayloadDialog
         handleClose={handleDialogClose}
         handleReplay={handleReplay}

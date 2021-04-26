@@ -16,6 +16,7 @@ import { usePagination, useTable } from "react-table";
 import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
 import { WebhookPayloadDialog } from "./WebhookPayloadDialog";
 import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
+import { replayPlexWebhook } from "../api";
 
 const columns = [
   { Header: "ID", accessor: "id" },
@@ -30,14 +31,8 @@ const columns = [
     id: "replay",
     Cell: ({ row: { original } }) => {
       return (
-        <Tooltip title="Replay event">
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("Row replay click", original);
-            }}
-            size="small"
-          >
+        <Tooltip placement="left" title="Replay event">
+          <IconButton size="small">
             <Replay />
           </IconButton>
         </Tooltip>
@@ -94,6 +89,13 @@ export function PlexWebhookTable() {
     setDialogOpen(false);
   };
 
+  const handleReplay = (e, payload) => {
+    e.stopPropagation();
+    replayPlexWebhook(payload)
+      .then((r) => console.log(r))
+      .catch((e) => console.error(e));
+  };
+
   useEffect(() => {
     fetchPlexWebhooks({ pageIndex, pageSize });
   }, [fetchPlexWebhooks, pageIndex, pageSize]);
@@ -102,6 +104,7 @@ export function PlexWebhookTable() {
     <>
       <WebhookPayloadDialog
         handleClose={handleDialogClose}
+        handleReplay={handleReplay}
         open={dialogOpen}
         value={selectedPayload}
       />
@@ -136,10 +139,16 @@ export function PlexWebhookTable() {
                       <TableCell
                         component="div"
                         {...cell.getCellProps({
-                          style: cell.column.id === "replay" && {
-                            padding: 0,
-                            textAlign: "center",
-                          },
+                          ...(cell.column.id === "replay" && {
+                            style: {
+                              padding: 0,
+                              textAlign: "center",
+                            },
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              handleReplay(e, row.original.payload);
+                            },
+                          }),
                         })}
                       >
                         {cell.render("Cell")}

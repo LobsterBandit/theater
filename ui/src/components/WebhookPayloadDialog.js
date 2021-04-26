@@ -43,9 +43,9 @@ export function WebhookPayloadDialog({
       <DialogActions>
         <Button
           color="primary"
-          onClick={() => {
-            handleReplay?.();
-            console.log("Dialog replay click", value);
+          onClick={(e) => {
+            e.stopPropagation();
+            handleReplay(e, value.payload);
           }}
           variant="contained"
         >

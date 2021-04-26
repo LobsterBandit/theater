@@ -10,7 +10,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/hekmon/plexwebhooks"
 	_ "modernc.org/sqlite"
 )
 
@@ -26,9 +25,9 @@ type PaginationOptions struct {
 }
 
 type PlexWebhook struct {
-	ID      int                  `json:"id"`
-	Date    string               `json:"date"`
-	Payload plexwebhooks.Payload `json:"payload"`
+	ID      int             `json:"id"`
+	Date    string          `json:"date"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 func InitStore(dir string) *Store {
@@ -106,18 +105,10 @@ func mapRowsToPlexWebhooks(rows *sql.Rows) (list []*PlexWebhook, err error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var rawPayload []byte
-
 		plexWebhook := &PlexWebhook{}
 
-		if err = rows.Scan(&plexWebhook.ID, &plexWebhook.Date, &rawPayload); err != nil {
+		if err = rows.Scan(&plexWebhook.ID, &plexWebhook.Date, &plexWebhook.Payload); err != nil {
 			err = fmt.Errorf("error scanning query results: %w", err)
-
-			return
-		}
-
-		if err = json.Unmarshal(rawPayload, &plexWebhook.Payload); err != nil {
-			err = fmt.Errorf("error converting raw payload: %w", err)
 
 			return
 		}

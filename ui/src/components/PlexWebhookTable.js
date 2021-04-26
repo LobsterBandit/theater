@@ -1,4 +1,7 @@
 import {
+  Alert,
+  IconButton,
+  Snackbar,
   Table,
   TableBody,
   TableContainer,
@@ -6,13 +9,16 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Tooltip,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import Replay from "@material-ui/icons/Replay";
 import { useEffect, useState } from "react";
 import { usePagination, useTable } from "react-table";
 import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
 import { WebhookPayloadDialog } from "./WebhookPayloadDialog";
 import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
+import { replayPlexWebhook } from "../api";
 
 const columns = [
   { Header: "ID", accessor: "id" },
@@ -23,19 +29,21 @@ const columns = [
   { Header: "Type", accessor: "payload.Metadata.type" },
   { Header: "Title", accessor: "payload.Metadata.title" },
   {
-    Header: "Payload",
-    accessor: "payload",
-    Cell: ({ value }) => (
-      <pre
-        style={{
-          whiteSpace: "pre-wrap",
-          wordWrap: "break-word",
-          background: "lightgray",
-        }}
-      >
-        {JSON.stringify(value, null, 2)}
-      </pre>
-    ),
+    Header: "Replay",
+    id: "replay",
+    Cell: () => {
+      return (
+        <Tooltip
+          disableInteractive={true}
+          placement="left"
+          title="Replay event"
+        >
+          <IconButton size="small">
+            <Replay />
+          </IconButton>
+        </Tooltip>
+      );
+    },
   },
 ];
 
@@ -76,6 +84,12 @@ export function PlexWebhookTable() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPayload, setSelectedPayload] = useState({});
+  const [snackState, setSnackState] = useState({
+    open: false,
+    message: "",
+    key: null,
+    severity: "info",
+  });
 
   const openDialog = (data) => {
     setSelectedPayload(data);
@@ -87,14 +101,63 @@ export function PlexWebhookTable() {
     setDialogOpen(false);
   };
 
+  const handleReplay = (e, payload) => {
+    e.stopPropagation();
+    setSnackState({
+      open: true,
+      message: `Replaying ${payload.event} webhook...`,
+      severity: "info",
+      key: Date.now(),
+    });
+    replayPlexWebhook(payload)
+      .then((message) => {
+        setSnackState({
+          open: true,
+          message,
+          severity: "success",
+          key: Date.now(),
+        });
+      })
+      .catch((error) => {
+        setSnackState({
+          open: true,
+          message: error,
+          severity: "error",
+          key: Date.now(),
+        });
+      });
+  };
+
   useEffect(() => {
     fetchPlexWebhooks({ pageIndex, pageSize });
   }, [fetchPlexWebhooks, pageIndex, pageSize]);
 
   return (
     <>
+      <Snackbar
+        key={snackState.key}
+        anchorOrigin={{ horizontal: "center", vertical: "top" }}
+        autoHideDuration={5000}
+        open={snackState.open}
+        onClose={(e, reason) => {
+          if (reason === "clickaway") {
+            return;
+          }
+          setSnackState({
+            open: false,
+            message: "",
+            key: null,
+            severity: "info",
+          });
+        }}
+      >
+        <Alert severity={snackState.severity} variant="filled">
+          {snackState.message}
+        </Alert>
+      </Snackbar>
       <WebhookPayloadDialog
         handleClose={handleDialogClose}
+        handleReplay={handleReplay}
         open={dialogOpen}
         value={selectedPayload}
       />
@@ -126,7 +189,26 @@ export function PlexWebhookTable() {
                 >
                   {row.cells.map((cell) => {
                     return (
-                      <TableCell component="div" {...cell.getCellProps()}>
+                      <TableCell
+                        component="div"
+                        {...cell.getCellProps({
+                          ...(cell.column.id === "replay" && {
+                            "data-eventsrc": "table-cell",
+                            style: {
+                              padding: 0,
+                              textAlign: "center",
+                            },
+                            onClick: (e) => {
+                              if (
+                                e.target.dataset["eventsrc"] !== "table-cell"
+                              ) {
+                                e.stopPropagation();
+                                handleReplay(e, row.original.payload);
+                              }
+                            },
+                          }),
+                        })}
+                      >
                         {cell.render("Cell")}
                       </TableCell>
                     );

@@ -124,11 +124,13 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 
 	go s.ActionHandler.ProcessAll(result.Payload)
 
-	go func() {
-		if err := s.Store.Insert(result); err != nil {
-			log.Println("unable to save webhook:", err)
-		}
-	}()
+	if xrt := r.Header.Get("X-Request-Type"); xrt != "replay" {
+		go func() {
+			if err := s.Store.Insert(result); err != nil {
+				log.Println("unable to save webhook:", err)
+			}
+		}()
+	}
 }
 
 func (s *Server) listPlexWebhooks(w http.ResponseWriter, r *http.Request) {

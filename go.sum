@@ -1,3 +1,5 @@
+github.com/LobsterBandit/plexwebhooks v1.0.1-0.20210502214208-963b544535e5 h1:pkfkLuk8gasxsY7osJCZxx73YiGFBe0xH944+lL+bfQ=
+github.com/LobsterBandit/plexwebhooks v1.0.1-0.20210502214208-963b544535e5/go.mod h1:Ky267kBbEGLsb+V98r2MOmHolVSebTFCioN7LC0/MGA=
 github.com/amimof/huego v1.2.0 h1:hdJontFo4YKKumKlc/+fXFHQeON0bWqmiHds7JhNfvs=
 github.com/amimof/huego v1.2.0/go.mod h1:z1Sy7Rrdzmb+XsGHVEhODrRJRDq4RCFW7trCI5cKmeA=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
@@ -8,8 +10,6 @@ github.com/go-chi/chi/v5 v5.0.2 h1:4xKeALZdMEsuI5s05PU2Bm89Uc5iM04qFubUCl5LfAQ=
 github.com/go-chi/chi/v5 v5.0.2/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
 github.com/google/go-cmp v0.5.3 h1:x95R7cp+rSeeqAMI2knLtQ0DKlaBhv2NrtrOvafPHRo=
 github.com/google/go-cmp v0.5.3/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/hekmon/plexwebhooks v1.0.0 h1:Wu5ETO/AMPJl6/RxKvymJUpFacCU9a82BOvXDgdrP5Y=
-github.com/hekmon/plexwebhooks v1.0.0/go.mod h1:Ky267kBbEGLsb+V98r2MOmHolVSebTFCioN7LC0/MGA=
 github.com/jarcoal/httpmock v1.0.4 h1:jp+dy/+nonJE4g4xbVtl9QdrUNbn6/3hDT5R4nDIZnA=
 github.com/jarcoal/httpmock v1.0.4/go.mod h1:ATjnClrvW/3tijVmpL/va5Z3aAyGvqU3gCT8nX0Txik=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=

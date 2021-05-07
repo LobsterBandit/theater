@@ -119,6 +119,16 @@ func (s *Server) acceptPlexWebhook(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("unable to parse webhook request:", err)
 
+		if len(result.RawPayload) > 0 {
+			if xrt := r.Header.Get("X-Request-Type"); xrt != "replay" {
+				go func() {
+					if err := s.Store.Insert(result); err != nil {
+						log.Println("unable to save webhook:", err)
+					}
+				}()
+			}
+		}
+
 		return
 	}
 

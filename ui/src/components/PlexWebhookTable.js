@@ -10,6 +10,7 @@ import {
   TablePagination,
   TableRow,
   Tooltip,
+  TableSortLabel,
 } from "@material-ui/core";
 import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
 import Replay from "@material-ui/icons/Replay";
@@ -19,6 +20,7 @@ import { PlexWebhookToolbar } from "./PlexWebhookToolbar";
 import { WebhookPayloadDialog } from "./WebhookPayloadDialog";
 import { usePlexWebhooks } from "../hooks/usePlexWebhooks";
 import { replayPlexWebhook } from "../api";
+import { useSortBy } from "react-table/dist/react-table.development";
 
 const columns = [
   { Header: "ID", accessor: "id" },
@@ -79,6 +81,7 @@ export function PlexWebhookTable() {
       manualPagination: true,
       pageCount: total === -1 ? total : total / pagination.pageSize,
     },
+    useSortBy,
     usePagination
   );
 
@@ -170,8 +173,28 @@ export function PlexWebhookTable() {
             {headerGroups.map((headerGroup) => (
               <TableRow component="div" {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map((column) => (
-                  <TableCell component="div" {...column.getHeaderProps()}>
-                    {column.render("Header")}
+                  <TableCell
+                    component="div"
+                    sortDirection={
+                      column.isSorted
+                        ? column.isSortedDesc
+                          ? "desc"
+                          : "asc"
+                        : false
+                    }
+                    {...column.getHeaderProps(column.getSortByToggleProps())}
+                  >
+                    {column.canSort ? (
+                      <TableSortLabel
+                        active={column.isSorted}
+                        direction={column.isSortedDesc ? "desc" : "asc"}
+                        onClick={() => {}}
+                      >
+                        {column.render("Header")}
+                      </TableSortLabel>
+                    ) : (
+                      column.render("Header")
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

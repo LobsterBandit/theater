@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/amimof/huego"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	plex "github.com/hekmon/plexwebhooks"
@@ -89,6 +92,17 @@ func (s *Server) configureActions() {
 		}
 
 		s.ActionHandler.Add(hueActions...)
+	}
+
+	// add mqtt action only if config provided
+	broker, _ := url.Parse("mqtt://mosquitto")
+	mqttClient := autopaho.ClientConfig{
+		BrokerUrls:     []*url.URL{broker},
+		OnConnectionUp: func(*autopaho.ConnectionManager, *paho.Connack) { log.Println("mqtt connected") },
+		OnConnectError: func(err error) { log.Printf("mqtt error connecting: %s\n", err) },
+		ClientConfig: paho.ClientConfig{
+			
+		}
 	}
 }
 

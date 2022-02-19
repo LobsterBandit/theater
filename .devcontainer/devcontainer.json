@@ -4,25 +4,31 @@
   "image": "lobsterbandit/dev-golang:edge",
   "extensions": ["golang.go", "mhutchie.git-graph"],
   "shutdownAction": "none",
-    
+
   "workspaceFolder": "/workspace",
-  "workspaceMount": "source=theater-workspace,target=/workspace,type=volume",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
 
   "mounts": [
+    "source=/home/lobsterbandit/.ssh,target=/home/gopher/.ssh,type=bind",
     "source=theater-vscode-server,target=/home/gopher/.vscode-server/extensions,type=volume",
     "source=theater-vscode-server-insiders,target=/home/gopher/.vscode-server-insiders/extensions,type=volume"
   ],
-    
+
   "settings": {
     "go.lintOnSave": "file",
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
       "--enable-all",
-      "-D", "forbidigo",
-      "-D", "lll",
-      "-D", "funlen",
-      "-D", "nakedret",
-      "-D", "exhaustivestruct"
+      "-D",
+      "forbidigo",
+      "-D",
+      "lll",
+      "-D",
+      "funlen",
+      "-D",
+      "nakedret",
+      "-D",
+      "exhaustivestruct"
     ],
     "go.useLanguageServer": true,
     "go.vetOnSave": "package",

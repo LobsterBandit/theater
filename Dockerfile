@@ -1,4 +1,4 @@
-FROM node:current-alpine as ui-builder
+FROM node:lts-alpine as ui-builder
 
 WORKDIR /tmp/ui
 
